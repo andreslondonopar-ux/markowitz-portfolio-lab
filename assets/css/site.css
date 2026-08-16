@@ -40,12 +40,10 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 .wrap { max-width: 1600px; margin: 0 auto; padding: 0 40px; }
 @media (max-width: 640px) { .wrap { padding: 0 20px; } }
 
-/* Medida de lectura: el contenedor se ensancha para que gráficas y tarjetas respiren,
-   pero el texto corrido se limita a ~80ch — si no, a pantallas anchas los párrafos
-   estiran las líneas más allá de lo legible. El encabezado de cada sección comparte el
-   mismo ancho que su párrafo (en vez de encabezado ancho + párrafo angosto sueltos),
-   para que se lean como una sola columna editorial — la gráfica/tarjeta de abajo sí
-   rompe a todo el ancho del .wrap. */
+/* Todas las secciones comparten el mismo tope de ancho (encabezado, párrafo, callout,
+   fórmula, barra de controles) para que se vean homogéneas entre sí — las secciones sin
+   gráfica (ej. Paso 4) no se ven más angostas/vacías que las que sí tienen una gráfica
+   ancha llenando el espacio. */
 .step .wrap > p,
 .hero p.lead,
 .hero .eyebrow,
@@ -53,7 +51,7 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 .step-head,
 .callout,
 .step .wrap > ul {
-  max-width: 880px;
+  max-width: 1400px;
 }
 
 h1, h2, h3 { font-family: var(--font-display); font-weight: 600; text-wrap: balance; margin: 0 0 14px; color: var(--text); }
@@ -147,7 +145,7 @@ body.is-recalculating .step table.data-table {
 
 /* --- Ticker input bar --- */
 .control-bar {
-  max-width: 880px;
+  max-width: 1400px;
   background: var(--bg-panel);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -232,7 +230,7 @@ table.data-table th { color: var(--text-faint); font-weight: 500; font-size: 12p
 
 /* --- Formula blocks --- */
 .formula-block {
-  max-width: 880px;
+  max-width: 1400px;
   background: var(--bg-panel);
   border: 1px solid var(--line);
   border-left: 3px solid var(--accent);

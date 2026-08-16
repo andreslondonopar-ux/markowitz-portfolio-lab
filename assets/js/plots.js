@@ -158,6 +158,15 @@ const Plots = (() => {
     const layout = baseLayout(null, {
       xaxis: { title: "Volatilidad anualizada (%)", gridcolor: COLORS.grid },
       yaxis: { title: "Retorno esperado anualizado (%)", gridcolor: COLORS.grid },
+      margin: { t: 20, r: 40, b: 150, l: 55 },
+      legend: {
+        orientation: "h",
+        x: 0,
+        y: -0.22,
+        yanchor: "top",
+        font: { color: COLORS.text, size: 11.5 },
+        bgcolor: "rgba(0,0,0,0)",
+      },
     });
     Plotly.newPlot(el, traces, layout, CONFIG);
   }

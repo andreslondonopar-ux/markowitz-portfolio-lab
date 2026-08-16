@@ -107,6 +107,7 @@ code { font-family: var(--font-mono); font-size: 0.9em; background: var(--accent
 }
 .plot { width: 100%; height: 420px; }
 .plot.short { height: 300px; }
+.plot.tall { height: 560px; }
 
 /* --- Ticker input bar --- */
 .control-bar {

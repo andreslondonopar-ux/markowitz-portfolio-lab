@@ -198,7 +198,7 @@
       directamente de la simulación (el punto de menor riesgo observado en cada nivel de
       retorno) — la que de verdad aplica si no puedes o no quieres ir corto.
     </p>
-    <div class="card"><div class="plot" id="plot-frontier"></div></div>
+    <div class="card"><div class="plot tall" id="plot-frontier"></div></div>
   </div>
 </section>
 
@@ -236,6 +236,14 @@
       asigna la fórmula del Paso 4 a cada activo para lograr ese retorno con el mínimo riesgo
       posible.
     </p>
+    <div class="callout">
+      <strong>¿Por qué a veces salen pesos negativos?</strong> Esta calculadora usa la fórmula
+      <em>analítica</em> del Paso 4, que permite ventas en corto (shorting) sin restricción —
+      la misma curva blanca que en el Paso 6 se "sale" de la nube de simulación. Un peso
+      negativo significa vender ese activo en corto para financiar una posición más grande en
+      los demás, no un error. Si prefieres una solución realista sin shorting, mira la
+      <strong>envolvente long-only</strong> (línea punteada naranja) del Paso 6 en su lugar.
+    </div>
     <div class="slider-row">
       <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-faint)">Retorno objetivo</span>
       <input type="range" id="target-return-slider" min="0" max="1" step="0.001" value="0.1" />
@@ -243,6 +251,7 @@
     </div>
     <div id="target-tiles" class="stat-grid"></div>
     <div class="card"><div class="plot short" id="plot-target-weights"></div></div>
+    <p id="target-short-note" class="status-line" style="margin-top:10px"></p>
   </div>
 </section>
 

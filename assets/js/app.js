@@ -24,6 +24,7 @@
   const targetReturnValueEl = el("target-return-value");
   const targetTilesEl = el("target-tiles");
   const plotTargetWeightsEl = el("plot-target-weights");
+  const targetShortNoteEl = el("target-short-note");
 
   function fmtPct(x, d = 1) {
     return (x * 100).toFixed(d) + "%";
@@ -121,7 +122,13 @@
         <div class="stat-tile"><div class="label">Riesgo resultante</div><div class="value">${fmtPct(vol)}</div></div>
         <div class="stat-tile"><div class="label">Sharpe</div><div class="value ${sharpe >= 0 ? "up" : "down"}">${fmtNum(sharpe)}</div></div>
       `;
-      Plots.renderWeightsBar(plotTargetWeightsEl, Markowitz.weightTable(usedTickers, w));
+      const weightTable = Markowitz.weightTable(usedTickers, w);
+      Plots.renderWeightsBar(plotTargetWeightsEl, weightTable);
+
+      const shorted = weightTable.filter((t) => t.weight < 0);
+      targetShortNoteEl.textContent = shorted.length
+        ? `Este portafolio vende en corto: ${shorted.map((t) => `${t.ticker} (${fmtPct(t.weight)})`).join(", ")}.`
+        : "Este portafolio no requiere ventas en corto — todos los pesos son positivos.";
     }
 
     targetSlider.oninput = update;

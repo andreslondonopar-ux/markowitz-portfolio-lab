@@ -229,8 +229,12 @@
     <div id="notable-tiles" class="stat-grid"></div>
     <div class="grid-2">
       <div class="card">
-        <h3 style="font-size:1rem">Pesos del portafolio tangente</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="font-size:1rem; margin:0">Pesos del portafolio tangente</h3>
+          <button type="button" class="table-toggle" id="tangency-table-toggle">Ver como tabla</button>
+        </div>
         <div class="plot" id="plot-tangency-weights"></div>
+        <div id="tangency-table-wrap" class="table-toggle-wrap" hidden></div>
       </div>
       <div class="card">
         <h3 style="font-size:1rem">Comparación de portafolios</h3>
@@ -254,7 +258,13 @@
       <span class="slider-value" id="target-return-value">—</span>
     </div>
     <div id="target-tiles" class="stat-grid"></div>
-    <div class="card"><div class="plot" id="plot-target-weights"></div></div>
+    <div class="card">
+      <div style="display:flex; justify-content:flex-end;">
+        <button type="button" class="table-toggle" id="target-table-toggle">Ver como tabla</button>
+      </div>
+      <div class="plot" id="plot-target-weights"></div>
+      <div id="target-table-wrap" class="table-toggle-wrap" hidden></div>
+    </div>
     <p id="target-short-note" class="status-line" style="margin-top:10px"></p>
   </div>
 </section>
@@ -265,10 +275,11 @@
     <div class="callout danger">
       Este sitio es material educativo, no asesoría financiera. Los datos vienen de Yahoo
       Finance (fuente gratuita, sin garantía de exactitud y con posibles huecos). El retorno
-      esperado se estima como el promedio histórico, que es un predictor pobre del futuro — el
-      modelo optimiza sobre datos pasados, no garantiza resultados futuros. Aun en el escenario
-      base (long-only) el modelo sigue asumiendo que se puede comprar cualquier fracción de un
-      activo sin costos de transacción, lo cual simplifica la realidad.
+      esperado se estima como el promedio histórico, un predictor pobre del futuro — y los
+      pesos "óptimos" se calculan sobre el mismo histórico que se usó para estimarlo, es
+      decir, es optimización dentro de la muestra, no una predicción validada fuera de ella.
+      (Los demás supuestos del modelo — normalidad, sin costos de transacción — están en el
+      Paso 4.)
     </div>
     <p style="margin-top:20px">
       Para profundizar: Harry Markowitz, <em>"Portfolio Selection"</em>, Journal of Finance

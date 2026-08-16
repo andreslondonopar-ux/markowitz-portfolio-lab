@@ -27,11 +27,15 @@ const MAX_TICKERS = 10;
   const plotFrontierEl = el("plot-frontier");
   const notableTilesEl = el("notable-tiles");
   const plotTangencyWeightsEl = el("plot-tangency-weights");
+  const tangencyTableToggle = el("tangency-table-toggle");
+  const tangencyTableWrap = el("tangency-table-wrap");
   const comparisonTableWrapEl = el("comparison-table-wrap");
   const targetSlider = el("target-return-slider");
   const targetReturnValueEl = el("target-return-value");
   const targetTilesEl = el("target-tiles");
   const plotTargetWeightsEl = el("plot-target-weights");
+  const targetTableToggle = el("target-table-toggle");
+  const targetTableWrap = el("target-table-wrap");
   const targetShortNoteEl = el("target-short-note");
   const paso8CalloutEl = el("paso8-callout");
 
@@ -59,6 +63,7 @@ const MAX_TICKERS = 10;
   }
   function setBusy(b) {
     recalcBtn.disabled = b;
+    document.body.classList.toggle("is-recalculating", b);
   }
 
   function renderStatTiles(tickers, mean, cov) {
@@ -106,6 +111,23 @@ const MAX_TICKERS = 10;
       })
       .join("");
     comparisonTableWrapEl.innerHTML = `<table class="data-table"><thead><tr><th>Portafolio</th><th>Retorno</th><th>Vol</th><th>Sharpe</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  function renderWeightsTable(wrapEl, weightTable) {
+    const sorted = [...weightTable].sort((a, b) => b.weight - a.weight);
+    const rows = sorted
+      .map((w) => `<tr><td>${w.ticker}</td><td>${fmtPct(w.weight)}</td></tr>`)
+      .join("");
+    wrapEl.innerHTML = `<table class="data-table"><thead><tr><th>Activo</th><th>Peso</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  function setupTableToggle(btn, wrapEl) {
+    btn.addEventListener("click", () => {
+      const isHidden = wrapEl.hasAttribute("hidden");
+      if (isHidden) wrapEl.removeAttribute("hidden");
+      else wrapEl.setAttribute("hidden", "");
+      btn.textContent = isHidden ? "Ocultar tabla" : "Ver como tabla";
+    });
   }
 
   function renderPaso8Callout(isLongOnly) {
@@ -157,6 +179,7 @@ const MAX_TICKERS = 10;
       `;
       const weightTable = Markowitz.weightTable(usedTickers, w);
       Plots.renderWeightsHBar(plotTargetWeightsEl, weightTable);
+      renderWeightsTable(targetTableWrap, weightTable);
 
       const shorted = weightTable.filter((t) => t.weight < -0.0005);
       targetShortNoteEl.textContent = shorted.length
@@ -211,7 +234,9 @@ const MAX_TICKERS = 10;
     });
 
     renderNotableTiles(activeMinVarReturn, activeMinVarVol, activeTangencyReturn, activeTangencyVol, activeTangencySharpe, riskFree);
-    Plots.renderWeightsHBar(plotTangencyWeightsEl, Markowitz.weightTable(usedTickers, activeTangencyW));
+    const tangencyWeightTable = Markowitz.weightTable(usedTickers, activeTangencyW);
+    Plots.renderWeightsHBar(plotTangencyWeightsEl, tangencyWeightTable);
+    renderWeightsTable(tangencyTableWrap, tangencyWeightTable);
     renderComparisonTable(usedTickers, mean, cov, riskFree, activeMinVarW, activeTangencyW);
 
     renderPaso8Callout(isLongOnly);
@@ -326,6 +351,8 @@ const MAX_TICKERS = 10;
     if (e.key === "Enter") runPipeline();
   });
   allowShortToggle.addEventListener("change", renderDownstream);
+  setupTableToggle(tangencyTableToggle, tangencyTableWrap);
+  setupTableToggle(targetTableToggle, targetTableWrap);
 
   document.addEventListener("DOMContentLoaded", () => {
     if (window.renderMathInElement) {

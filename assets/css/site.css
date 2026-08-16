@@ -109,6 +109,21 @@ code { font-family: var(--font-mono); font-size: 0.9em; background: var(--accent
 .plot.short { height: 300px; }
 .plot.tall { height: 560px; }
 
+/* Mientras se recalcula (fetch + optimización), las gráficas y tablas ya renderizadas
+   se atenúan en vez de quedar estáticas sin ninguna señal de que algo está pasando. */
+body.is-recalculating .step .plot,
+body.is-recalculating .step .stat-grid,
+body.is-recalculating .step table.data-table {
+  opacity: 0.35;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+.step .plot,
+.step .stat-grid,
+.step table.data-table {
+  transition: opacity 0.15s ease;
+}
+
 /* --- Ticker input bar --- */
 .control-bar {
   background: var(--bg-panel);
@@ -174,6 +189,19 @@ button.primary:disabled { opacity: 0.55; cursor: wait; }
 .stat-tile .value.down { color: var(--accent3); }
 
 table.data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table-toggle {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.table-toggle:hover { color: var(--text); border-color: var(--text-faint); }
+.table-toggle-wrap { margin-top: 12px; }
+
 table.data-table th, table.data-table td { text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--line); }
 table.data-table th:first-child, table.data-table td:first-child { text-align: left; color: var(--text); font-family: var(--font-mono); }
 table.data-table th { color: var(--text-faint); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }

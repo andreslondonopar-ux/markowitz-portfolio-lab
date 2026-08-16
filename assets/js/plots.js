@@ -37,7 +37,17 @@ const Plots = (() => {
     };
   }
 
+  // Paleta fija de líneas (hasta MAX_TICKERS=10) — categórica, orden fijo, no generada.
+  const LINE_COLORS = [
+    "#4fd1c5", "#f6ad55", "#f56565", "#60a5fa", "#a78bfa",
+    "#34d399", "#f472b6", "#fbbf24", "#22d3ee", "#94a3b8",
+  ];
+  const LINE_WIDTH = 1.6;
+  const LINE_WIDTH_ACTIVE = 3;
+  const DIM_OPACITY = 0.15;
+
   function renderNormalizedPrices(el, tickers, dates, priceMatrix) {
+    const n = tickers.length;
     const traces = tickers.map((t, i) => {
       const base = priceMatrix[0][i];
       return {
@@ -46,14 +56,38 @@ const Plots = (() => {
         type: "scatter",
         mode: "lines",
         name: t,
-        line: { width: 1.6 },
+        line: { width: LINE_WIDTH, color: LINE_COLORS[i % LINE_COLORS.length] },
       };
     });
     const layout = baseLayout(null, {
-      hovermode: "x unified",
+      hovermode: "closest",
       yaxis: { title: "Precio normalizado (base 100)", gridcolor: COLORS.grid },
     });
-    Plotly.newPlot(el, traces, layout, CONFIG);
+    Plotly.newPlot(el, traces, layout, CONFIG).then(() => {
+      const highlight = (idx) => {
+        const widths = new Array(n).fill(LINE_WIDTH);
+        const opacities = new Array(n).fill(DIM_OPACITY);
+        widths[idx] = LINE_WIDTH_ACTIVE;
+        opacities[idx] = 1;
+        Plotly.restyle(el, { "line.width": widths, opacity: opacities });
+      };
+      const reset = () => {
+        Plotly.restyle(el, { "line.width": new Array(n).fill(LINE_WIDTH), opacity: new Array(n).fill(1) });
+      };
+
+      el.on("plotly_hover", (evt) => {
+        if (evt.points && evt.points.length) highlight(evt.points[0].curveNumber);
+      });
+      el.on("plotly_unhover", reset);
+
+      // Resaltar también al pasar el mouse sobre la leyenda (más fácil de apuntar que
+      // una línea delgada entre varias superpuestas).
+      el.querySelectorAll(".legend .traces").forEach((node, idx) => {
+        node.style.cursor = "pointer";
+        node.addEventListener("mouseenter", () => highlight(idx));
+        node.addEventListener("mouseleave", reset);
+      });
+    });
   }
 
   function renderCorrelationHeatmap(el, tickers, corr) {

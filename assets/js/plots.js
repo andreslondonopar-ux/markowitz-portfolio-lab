@@ -78,8 +78,9 @@ const Plots = (() => {
     Plotly.newPlot(el, [trace], layout, { ...CONFIG, scrollZoom: false });
   }
 
-  function renderEfficientFrontier(el, { cloud, envelope, analytic, minVarPoint, tangencyPoint, cml }) {
+  function renderEfficientFrontier(el, { cloud, longOnlyCurve, analytic, minVarPoint, tangencyPoint, cml, activeMode }) {
     const traces = [];
+    const isLongOnlyActive = activeMode !== "short";
 
     traces.push({
       x: cloud.map((p) => p.vol * 100),
@@ -100,14 +101,17 @@ const Plots = (() => {
       hovertemplate: "Vol: %{x:.2f}%<br>Retorno: %{y:.2f}%<extra></extra>",
     });
 
-    if (envelope && envelope.length) {
+    if (longOnlyCurve && longOnlyCurve.length) {
       traces.push({
-        x: envelope.map((p) => p.vol * 100),
-        y: envelope.map((p) => p.return * 100),
+        x: longOnlyCurve.map((p) => p.vol * 100),
+        y: longOnlyCurve.map((p) => p.return * 100),
         mode: "lines",
         type: "scatter",
-        name: "Envolvente long-only (desde la simulación)",
-        line: { color: COLORS.accent2, width: 2, dash: "dot" },
+        name: isLongOnlyActive ? "Frontera long-only (escenario base)" : "Frontera long-only (sin shorting)",
+        line: isLongOnlyActive
+          ? { color: COLORS.accent2, width: 3 }
+          : { color: COLORS.accent2, width: 1.5, dash: "dot" },
+        opacity: isLongOnlyActive ? 1 : 0.5,
       });
     }
 
@@ -117,8 +121,9 @@ const Plots = (() => {
         y: analytic.map((p) => p.return * 100),
         mode: "lines",
         type: "scatter",
-        name: "Frontera analítica (permite shorting)",
-        line: { color: COLORS.text, width: 2 },
+        name: !isLongOnlyActive ? "Frontera analítica (escenario con shorting)" : "Frontera analítica (permite shorting)",
+        line: !isLongOnlyActive ? { color: COLORS.text, width: 3 } : { color: COLORS.text, width: 1.5, dash: "dot" },
+        opacity: !isLongOnlyActive ? 1 : 0.5,
       });
     }
 

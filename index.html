@@ -54,9 +54,21 @@
         <label for="years-input">Años de histórico</label>
         <input id="years-input" type="number" step="1" min="2" max="20" value="8" />
       </div>
+      <div class="field toggle-field">
+        <label for="allow-short-toggle">Escenario</label>
+        <label class="toggle">
+          <input type="checkbox" id="allow-short-toggle" />
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span class="toggle-label" id="allow-short-label">Long-only (base)</span>
+        </label>
+      </div>
       <button class="primary" id="recalc-btn">Recalcular</button>
     </div>
     <div class="status-line" id="status-line">Cargando ejemplo por defecto…</div>
+    <p style="font-size:13px; color:var(--text-faint); margin-top:10px; max-width:700px;">
+      Máximo 10 tickers (la optimización long-only prueba combinaciones de activos, y crece
+      rápido con cada uno adicional).
+    </p>
   </div>
 </header>
 
@@ -84,10 +96,9 @@
         <p style="margin:0"><strong>En este ejemplo</strong></p>
         <p style="margin-top:8px" id="paso1-ticker-list">—</p>
         <p style="margin:0; font-size:13.5px;">
-          Los tickers deben existir en <a href="https://stooq.com" target="_blank" rel="noopener">Stooq</a>
-          (fuente de datos de este sitio). Para acciones/ETFs de EE. UU. basta con el símbolo
-          normal (ej. <code>AAPL</code>); para otros mercados usa el sufijo de Stooq (ej.
-          <code>xyz.uk</code>).
+          Los tickers deben existir en Yahoo Finance (fuente de datos de este sitio). Para
+          acciones/ETFs de EE. UU. basta con el símbolo normal (ej. <code>AAPL</code>); para
+          otros mercados usa el sufijo de Yahoo Finance (ej. <code>SAP.DE</code>).
         </p>
       </div>
     </div>
@@ -192,11 +203,12 @@
     <p>
       La <strong>frontera eficiente</strong> es el borde superior-izquierdo de lo posible: para
       cada nivel de riesgo, el máximo retorno alcanzable (o, equivalentemente, para cada retorno
-      objetivo, el mínimo riesgo). Aquí se muestran dos versiones sobre la misma nube: la curva
-      <strong>analítica</strong> (fórmula cerrada del Paso 4, que permite ventas en corto — por
-      eso puede "salirse" de la nube) y la <strong>envolvente long-only</strong>, calculada
-      directamente de la simulación (el punto de menor riesgo observado en cada nivel de
-      retorno) — la que de verdad aplica si no puedes o no quieres ir corto.
+      objetivo, el mínimo riesgo). El <strong>escenario base de este sitio es long-only</strong>
+      (sin ventas en corto, como la mayoría de portafolios reales) — esa es la curva
+      <strong>naranja</strong>. La curva <strong>blanca</strong> es la versión
+      <em>analítica</em> del Paso 4, que sí permite shorting sin restricción (por eso puede
+      "salirse" de la nube). En el gráfico, la curva resaltada (sólida y gruesa) es siempre el
+      escenario activo — cámbialo con el interruptor de arriba para explorarlo en el Paso 8.
     </p>
     <div class="card"><div class="plot tall" id="plot-frontier"></div></div>
   </div>
@@ -233,17 +245,9 @@
     <div class="step-head"><span class="step-num">PASO 8</span><h2>Calculadora: elige tu nivel de riesgo</h2></div>
     <p>
       Mueve el control para fijar un retorno anual objetivo y observa en vivo qué pesos exactos
-      asigna la fórmula del Paso 4 a cada activo para lograr ese retorno con el mínimo riesgo
-      posible.
+      necesitas en cada activo para lograr ese retorno con el mínimo riesgo posible.
     </p>
-    <div class="callout">
-      <strong>¿Por qué a veces salen pesos negativos?</strong> Esta calculadora usa la fórmula
-      <em>analítica</em> del Paso 4, que permite ventas en corto (shorting) sin restricción —
-      la misma curva blanca que en el Paso 6 se "sale" de la nube de simulación. Un peso
-      negativo significa vender ese activo en corto para financiar una posición más grande en
-      los demás, no un error. Si prefieres una solución realista sin shorting, mira la
-      <strong>envolvente long-only</strong> (línea punteada naranja) del Paso 6 en su lugar.
-    </div>
+    <div class="callout" id="paso8-callout"></div>
     <div class="slider-row">
       <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-faint)">Retorno objetivo</span>
       <input type="range" id="target-return-slider" min="0" max="1" step="0.001" value="0.1" />
@@ -259,12 +263,12 @@
   <div class="wrap">
     <div class="step-head"><span class="step-num">LÍMITES</span><h2>Limitaciones y para seguir leyendo</h2></div>
     <div class="callout danger">
-      Este sitio es material educativo, no asesoría financiera. Los datos vienen de
-      <a href="https://stooq.com" target="_blank" rel="noopener">Stooq</a> (fuente gratuita, sin
-      garantía de exactitud y con posibles huecos). El retorno esperado se estima como el
-      promedio histórico, que es un predictor pobre del futuro — el modelo optimiza sobre datos
-      pasados, no garantiza resultados futuros. La frontera analítica permite ventas en corto sin
-      límite, lo cual rara vez es realista para un inversionista retail.
+      Este sitio es material educativo, no asesoría financiera. Los datos vienen de Yahoo
+      Finance (fuente gratuita, sin garantía de exactitud y con posibles huecos). El retorno
+      esperado se estima como el promedio histórico, que es un predictor pobre del futuro — el
+      modelo optimiza sobre datos pasados, no garantiza resultados futuros. Aun en el escenario
+      base (long-only) el modelo sigue asumiendo que se puede comprar cualquier fracción de un
+      activo sin costos de transacción, lo cual simplifica la realidad.
     </div>
     <p style="margin-top:20px">
       Para profundizar: Harry Markowitz, <em>"Portfolio Selection"</em>, Journal of Finance
@@ -276,8 +280,8 @@
 
 <footer>
   <div class="wrap">
-    Markowitz Portfolio Lab — proyecto educativo independiente. Datos: Stooq. Cómputo: 100% en
-    el navegador (JavaScript), sin backend de optimización.
+    Markowitz Portfolio Lab — proyecto educativo independiente. Datos: Yahoo Finance. Cómputo:
+    100% en el navegador (JavaScript), sin backend de optimización.
   </div>
 </footer>
 

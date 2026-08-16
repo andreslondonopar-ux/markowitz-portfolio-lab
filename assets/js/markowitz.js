@@ -103,21 +103,11 @@ const Markowitz = (() => {
     return results;
   }
 
-  // Envolvente eficiente long-only: mínima volatilidad observada por bin de retorno.
-  function longOnlyEnvelope(simResults, nBins = 40) {
-    if (simResults.length === 0) return [];
-    const returns = simResults.map((r) => r.return);
-    const minR = Math.min(...returns);
-    const maxR = Math.max(...returns);
-    const binWidth = (maxR - minR) / nBins || 1e-9;
-    const bins = new Array(nBins).fill(null);
-    for (const r of simResults) {
-      let idx = Math.floor((r.return - minR) / binWidth);
-      if (idx >= nBins) idx = nBins - 1;
-      if (idx < 0) idx = 0;
-      if (!bins[idx] || r.vol < bins[idx].vol) bins[idx] = r;
-    }
-    return bins.filter(Boolean).sort((a, b) => a.return - b.return);
+  function subVector(v, idx) {
+    return idx.map((i) => v[i]);
+  }
+  function subMatrix(M, idx) {
+    return idx.map((i) => idx.map((j) => M[i][j]));
   }
 
   // Fórmulas clásicas de frontera eficiente sin restricción de shorting (Merton 1972).
@@ -177,6 +167,103 @@ const Markowitz = (() => {
     return covInvExcess.map((x) => x / denom);
   }
 
+  // --- Optimización long-only (sin ventas en corto) ---
+  //
+  // La fórmula analítica de arriba resuelve el problema sin restringir el signo de los
+  // pesos (permite shorting). Para exigir w >= 0 no hay fórmula cerrada: se prueban TODOS
+  // los subconjuntos posibles de activos activos (2^n, trivial para n <= ~10), se resuelve
+  // cada subconjunto con la misma fórmula cerrada (poniendo el resto en 0), se descartan los
+  // que resulten en algún peso negativo, y entre los que sí son factibles se toma el de menor
+  // varianza. A diferencia de una heurística (ej. "quitar el activo más negativo y reintentar"),
+  // esto prueba todas las combinaciones y por lo tanto siempre encuentra el óptimo real.
+
+  function longOnlyMinVarianceWeights(mean, cov) {
+    const n = mean.length;
+    if (n === 1) return [1];
+    let best = null;
+    for (let mask = 1; mask < 1 << n; mask++) {
+      const active = [];
+      for (let i = 0; i < n; i++) if (mask & (1 << i)) active.push(i);
+
+      let subW;
+      if (active.length === 1) {
+        subW = [1];
+      } else {
+        try {
+          subW = minVarianceWeights(subVector(mean, active), subMatrix(cov, active));
+        } catch (e) {
+          continue;
+        }
+      }
+      if (subW.some((x) => x < -1e-9)) continue;
+
+      const full = new Array(n).fill(0);
+      active.forEach((origI, k) => (full[origI] = Math.max(subW[k], 0)));
+      const vol = portfolioVol(full, cov);
+      if (!best || vol < best.vol) best = { weights: full, vol };
+    }
+    if (!best) throw new Error("No se encontró un portafolio long-only factible.");
+    return best.weights;
+  }
+
+  function longOnlyTargetReturnWeights(mean, cov, r) {
+    const n = mean.length;
+    if (n === 1) return [1];
+    let best = null;
+    for (let mask = 1; mask < 1 << n; mask++) {
+      const active = [];
+      for (let i = 0; i < n; i++) if (mask & (1 << i)) active.push(i);
+      if (active.length < 2) continue; // 1 solo activo casi nunca puede igualar r exactamente
+
+      let subW;
+      try {
+        subW = targetReturnWeights(subVector(mean, active), subMatrix(cov, active), r);
+      } catch (e) {
+        continue;
+      }
+      if (subW.some((x) => x < -1e-9)) continue;
+
+      const full = new Array(n).fill(0);
+      active.forEach((origI, k) => (full[origI] = Math.max(subW[k], 0)));
+      const vol = portfolioVol(full, cov);
+      if (!best || vol < best.vol) best = { weights: full, vol };
+    }
+    if (!best) throw new Error(`No hay un portafolio long-only factible para ${(r * 100).toFixed(1)}% de retorno.`);
+    return best.weights;
+  }
+
+  // Frontera eficiente long-only exacta: min-varianza global hasta el mejor activo individual
+  // (el máximo retorno alcanzable sin shorting es 100% en el activo de mayor retorno esperado).
+  function longOnlyFrontierCurve(mean, cov, riskFree, nPoints = 120) {
+    const minVarW = longOnlyMinVarianceWeights(mean, cov);
+    const minVarReturn = portfolioReturn(minVarW, mean);
+    const minVarVol = portfolioVol(minVarW, cov);
+    const maxAssetReturn = Math.max(...mean);
+
+    const points = [];
+    let tangencyPoint = null;
+    for (let i = 0; i < nPoints; i++) {
+      const r = minVarReturn + ((maxAssetReturn - minVarReturn) * i) / (nPoints - 1);
+      let w;
+      try {
+        w = longOnlyTargetReturnWeights(mean, cov, r);
+      } catch (e) {
+        continue;
+      }
+      const vol = portfolioVol(w, cov);
+      const ret = portfolioReturn(w, mean);
+      const sharpe = sharpeRatio(ret, vol, riskFree);
+      const point = { return: ret, vol, weights: w, sharpe };
+      points.push(point);
+      if (!tangencyPoint || sharpe > tangencyPoint.sharpe) tangencyPoint = point;
+    }
+    return {
+      points,
+      minVarPoint: { return: minVarReturn, vol: minVarVol, weights: minVarW },
+      tangencyPoint,
+    };
+  }
+
   function weightTable(tickers, weights) {
     return tickers.map((t, i) => ({ ticker: t, weight: weights[i] }));
   }
@@ -193,13 +280,15 @@ const Markowitz = (() => {
     sharpeRatio,
     randomWeights,
     monteCarloSimulate,
-    longOnlyEnvelope,
     analyticFrontierCoeffs,
     minVarianceWeights,
     targetReturnWeights,
     analyticFrontierVol,
     analyticFrontierCurve,
     tangencyWeights,
+    longOnlyMinVarianceWeights,
+    longOnlyTargetReturnWeights,
+    longOnlyFrontierCurve,
     weightTable,
     TRADING_DAYS,
   };

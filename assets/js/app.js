@@ -1,5 +1,11 @@
 // Orquestación: lee los tickers del usuario, llama a /api/prices, corre el pipeline
 // completo de Markowitz.js y actualiza cada sección de la página en vivo.
+//
+// Escenario base = long-only (sin ventas en corto), que es el caso realista para la
+// mayoría de portafolios. El interruptor "Permitir shorting" recalcula Paso 6-8 con la
+// fórmula analítica sin restricción — sin volver a pedir precios, reutilizando `state`.
+
+const MAX_TICKERS = 10;
 
 (function () {
   const el = (id) => document.getElementById(id);
@@ -9,6 +15,8 @@
   const yearsInput = el("years-input");
   const recalcBtn = el("recalc-btn");
   const statusLineEl = el("status-line");
+  const allowShortToggle = el("allow-short-toggle");
+  const allowShortLabel = el("allow-short-label");
 
   const paso1List = el("paso1-ticker-list");
   const plotPricesEl = el("plot-prices");
@@ -25,6 +33,10 @@
   const targetTilesEl = el("target-tiles");
   const plotTargetWeightsEl = el("plot-target-weights");
   const targetShortNoteEl = el("target-short-note");
+  const paso8CalloutEl = el("paso8-callout");
+
+  let state = null; // último pipeline calculado (precios/mean/cov/curvas), para recomputar sin refetch
+  let sliderTouched = false; // false = usar un punto de partida representativo; true = respetar la posición del usuario
 
   function fmtPct(x, d = 1) {
     return (x * 100).toFixed(d) + "%";
@@ -96,23 +108,44 @@
     comparisonTableWrapEl.innerHTML = `<table class="data-table"><thead><tr><th>Portafolio</th><th>Retorno</th><th>Vol</th><th>Sharpe</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
 
-  function setupTargetSlider({ mean, cov, coeffs, usedTickers, riskFree, minVarReturn, tangencyReturn }) {
-    const maxAssetReturn = Math.max(...mean);
+  function renderPaso8Callout(isLongOnly) {
+    paso8CalloutEl.innerHTML = isLongOnly
+      ? `<strong>Escenario base: sin ventas en corto.</strong> Todos los pesos aquí son ≥ 0 —
+         se probaron todas las combinaciones de activos posibles y se tomó la de menor riesgo
+         para cada retorno objetivo. Activa <strong>"Permitir shorting"</strong> arriba si
+         quieres ver la versión teórica sin restricción (Paso 4), que puede pedir posiciones
+         negativas.`
+      : `<strong>Shorting activado.</strong> Esta calculadora ahora usa la fórmula
+         <em>analítica</em> sin restricción del Paso 4. Un peso negativo significa vender ese
+         activo en corto para financiar una posición más grande en los demás — no es un error,
+         es lo que implica quitar la restricción de no-negatividad. Desactiva el interruptor de
+         arriba para volver al escenario base (long-only).`;
+  }
+
+  function setupTargetSlider({ mean, cov, usedTickers, riskFree, isLongOnly, coeffs, minVarReturn, maxReturn, defaultReturn }) {
     const sliderMin = minVarReturn;
-    const sliderMax = Math.max(maxAssetReturn * 1.15, tangencyReturn * 1.15, sliderMin + 0.01);
+    const sliderMax = Math.max(maxReturn, sliderMin + 0.01);
 
     targetSlider.min = sliderMin;
     targetSlider.max = sliderMax;
     targetSlider.step = (sliderMax - sliderMin) / 200 || 0.001;
-    targetSlider.value = clamp(tangencyReturn, sliderMin, sliderMax);
+    const startValue = sliderTouched ? parseFloat(targetSlider.value) : defaultReturn;
+    targetSlider.value = clamp(startValue, sliderMin, sliderMax);
+
+    function solve(r) {
+      return isLongOnly
+        ? Markowitz.longOnlyTargetReturnWeights(mean, cov, r)
+        : Markowitz.targetReturnWeights(mean, cov, r, coeffs);
+    }
 
     function update() {
       const r = parseFloat(targetSlider.value);
       targetReturnValueEl.textContent = fmtPct(r);
       let w;
       try {
-        w = Markowitz.targetReturnWeights(mean, cov, r, coeffs);
+        w = solve(r);
       } catch (e) {
+        targetShortNoteEl.textContent = e.message || "No se pudo resolver este punto.";
         return;
       }
       const vol = Markowitz.portfolioVol(w, cov);
@@ -125,23 +158,84 @@
       const weightTable = Markowitz.weightTable(usedTickers, w);
       Plots.renderWeightsBar(plotTargetWeightsEl, weightTable);
 
-      const shorted = weightTable.filter((t) => t.weight < 0);
+      const shorted = weightTable.filter((t) => t.weight < -0.0005);
       targetShortNoteEl.textContent = shorted.length
         ? `Este portafolio vende en corto: ${shorted.map((t) => `${t.ticker} (${fmtPct(t.weight)})`).join(", ")}.`
-        : "Este portafolio no requiere ventas en corto — todos los pesos son positivos.";
+        : "Este portafolio no requiere ventas en corto — todos los pesos son ≥ 0.";
     }
 
-    targetSlider.oninput = update;
+    targetSlider.oninput = () => {
+      sliderTouched = true;
+      update();
+    };
     // Evita que el scroll del mouse sobre el slider cambie su valor sin querer
     // (comportamiento nativo de Chrome en <input type="range"> al pasar el cursor encima).
     targetSlider.onwheel = (e) => e.preventDefault();
     update();
   }
 
+  // Recalcula Paso 6, 7 y 8 a partir de `state` (ya con precios/mean/cov listos) según el
+  // interruptor de shorting — no vuelve a pedir precios.
+  function renderDownstream() {
+    if (!state) return;
+    const { usedTickers, mean, cov, riskFree, cloud, coeffs, analyticCurve, minVarW, tangencyW, loFrontier } = state;
+    const isLongOnly = !allowShortToggle.checked;
+    allowShortLabel.textContent = isLongOnly ? "Long-only (base)" : "Con shorting";
+
+    const activeMinVarW = isLongOnly ? loFrontier.minVarPoint.weights : minVarW;
+    const activeMinVarReturn = isLongOnly ? loFrontier.minVarPoint.return : Markowitz.portfolioReturn(minVarW, mean);
+    const activeMinVarVol = isLongOnly ? loFrontier.minVarPoint.vol : Markowitz.portfolioVol(minVarW, cov);
+
+    const activeTangencyW = isLongOnly ? loFrontier.tangencyPoint.weights : tangencyW;
+    const activeTangencyReturn = isLongOnly
+      ? loFrontier.tangencyPoint.return
+      : Markowitz.portfolioReturn(tangencyW, mean);
+    const activeTangencyVol = isLongOnly ? loFrontier.tangencyPoint.vol : Markowitz.portfolioVol(tangencyW, cov);
+    const activeTangencySharpe = Markowitz.sharpeRatio(activeTangencyReturn, activeTangencyVol, riskFree);
+
+    const maxCloudVol = Math.max(...cloud.map((p) => p.vol));
+    const cmlMaxX = Math.max(maxCloudVol, activeTangencyVol) * 1.3;
+    const cml = [
+      { vol: 0, return: riskFree },
+      { vol: cmlMaxX, return: riskFree + activeTangencySharpe * cmlMaxX },
+    ];
+
+    Plots.renderEfficientFrontier(plotFrontierEl, {
+      cloud,
+      longOnlyCurve: loFrontier.points,
+      analytic: analyticCurve,
+      minVarPoint: { vol: activeMinVarVol, return: activeMinVarReturn },
+      tangencyPoint: { vol: activeTangencyVol, return: activeTangencyReturn },
+      cml,
+      activeMode: isLongOnly ? "longonly" : "short",
+    });
+
+    renderNotableTiles(activeMinVarReturn, activeMinVarVol, activeTangencyReturn, activeTangencyVol, activeTangencySharpe, riskFree);
+    Plots.renderWeightsPie(plotTangencyPieEl, Markowitz.weightTable(usedTickers, activeTangencyW));
+    renderComparisonTable(usedTickers, mean, cov, riskFree, activeMinVarW, activeTangencyW);
+
+    renderPaso8Callout(isLongOnly);
+    setupTargetSlider({
+      mean,
+      cov,
+      usedTickers,
+      riskFree,
+      isLongOnly,
+      coeffs,
+      minVarReturn: activeMinVarReturn,
+      maxReturn: isLongOnly ? Math.max(...mean) : Math.max(Math.max(...mean), activeTangencyReturn) * 1.15,
+      defaultReturn: activeTangencyReturn,
+    });
+  }
+
   async function runPipeline() {
     const tickers = parseTickers(tickersInput.value);
     if (tickers.length < 2) {
       setStatus("Ingresa al menos 2 tickers separados por coma.", true);
+      return;
+    }
+    if (tickers.length > MAX_TICKERS) {
+      setStatus(`Máximo ${MAX_TICKERS} tickers — la optimización long-only prueba todas las combinaciones posibles y crece rápido con cada activo adicional.`, true);
       return;
     }
 
@@ -184,6 +278,7 @@
       const cov = Markowitz.annualizedCov(returnsMatrix);
       const corr = Markowitz.corrFromCov(cov);
       const riskFree = (parseFloat(riskfreeInput.value) || 0) / 100;
+      sliderTouched = false; // dataset nuevo: arrancar el slider en un punto representativo de nuevo
 
       paso1List.textContent = usedTickers.join(", ");
 
@@ -203,39 +298,17 @@
       const cloud = Markowitz.monteCarloSimulate(mean, cov, riskFree, 4000);
       Plots.renderEfficientFrontier(plotMonteCarloEl, { cloud });
 
-      const envelope = Markowitz.longOnlyEnvelope(cloud, 40);
       const { points: analyticCurve } = Markowitz.analyticFrontierCurve(mean, cov, 150);
-
-      const minVarWeights = Markowitz.minVarianceWeights(mean, cov, coeffs);
-      const minVarReturn = Markowitz.portfolioReturn(minVarWeights, mean);
-      const minVarVol = Markowitz.portfolioVol(minVarWeights, cov);
-
+      const minVarW = Markowitz.minVarianceWeights(mean, cov, coeffs);
       const tangencyW = Markowitz.tangencyWeights(mean, cov, riskFree);
-      const tangencyReturn = Markowitz.portfolioReturn(tangencyW, mean);
-      const tangencyVol = Markowitz.portfolioVol(tangencyW, cov);
-      const tangencySharpe = Markowitz.sharpeRatio(tangencyReturn, tangencyVol, riskFree);
 
-      const maxCloudVol = Math.max(...cloud.map((p) => p.vol));
-      const cmlMaxX = Math.max(maxCloudVol, tangencyVol) * 1.3;
-      const cml = [
-        { vol: 0, return: riskFree },
-        { vol: cmlMaxX, return: riskFree + tangencySharpe * cmlMaxX },
-      ];
+      setStatus(`Calculando la frontera long-only exacta para ${usedTickers.length} activos…`);
+      // Resolución adaptativa: la búsqueda long-only prueba 2^n combinaciones por punto.
+      const loPoints = usedTickers.length <= 6 ? 150 : usedTickers.length <= 8 ? 100 : 60;
+      const loFrontier = Markowitz.longOnlyFrontierCurve(mean, cov, riskFree, loPoints);
 
-      Plots.renderEfficientFrontier(plotFrontierEl, {
-        cloud,
-        envelope,
-        analytic: analyticCurve,
-        minVarPoint: { vol: minVarVol, return: minVarReturn },
-        tangencyPoint: { vol: tangencyVol, return: tangencyReturn },
-        cml,
-      });
-
-      renderNotableTiles(minVarReturn, minVarVol, tangencyReturn, tangencyVol, tangencySharpe, riskFree);
-      Plots.renderWeightsPie(plotTangencyPieEl, Markowitz.weightTable(usedTickers, tangencyW));
-      renderComparisonTable(usedTickers, mean, cov, riskFree, minVarWeights, tangencyW);
-
-      setupTargetSlider({ mean, cov, coeffs, usedTickers, riskFree, minVarReturn, tangencyReturn });
+      state = { usedTickers, dates, mean, cov, riskFree, cloud, coeffs, analyticCurve, minVarW, tangencyW, loFrontier };
+      renderDownstream();
 
       setStatus(
         `Listo — ${usedTickers.length} activos, ${dates.length} observaciones diarias (${dates[0]} → ${dates[dates.length - 1]}).` +
@@ -252,6 +325,7 @@
   tickersInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") runPipeline();
   });
+  allowShortToggle.addEventListener("change", renderDownstream);
 
   document.addEventListener("DOMContentLoaded", () => {
     if (window.renderMathInElement) {

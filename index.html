@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Markowitz Portfolio Lab — optimización de portafolios paso a paso</title>
+<meta name="description" content="Un laboratorio educativo interactivo que recorre, paso a paso y con datos reales, todo el proceso de optimización de portafolios de Markowitz (media-varianza): de la selección de activos a la frontera eficiente." />
+<link rel="stylesheet" href="assets/css/site.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+</head>
+<body>
+
+<div class="topnav">
+  <div class="wrap">
+    <div class="brand">Markowitz<span>Lab</span></div>
+    <nav>
+      <a href="#intro">Intro</a>
+      <a href="#paso1">1. Activos</a>
+      <a href="#paso2">2. Datos</a>
+      <a href="#paso3">3. Estadística</a>
+      <a href="#paso4">4. Teoría</a>
+      <a href="#paso5">5. Monte Carlo</a>
+      <a href="#paso6">6. Frontera</a>
+      <a href="#paso7">7. Portafolios</a>
+      <a href="#paso8">8. Calculadora</a>
+      <a href="#limitaciones">Límites</a>
+    </nav>
+  </div>
+</div>
+
+<header class="hero" id="intro">
+  <div class="wrap">
+    <p class="eyebrow">Proyecto educativo · Teoría Moderna de Portafolios</p>
+    <h1>Optimización de portafolios de Markowitz, paso a paso</h1>
+    <p class="lead">
+      En 1952, Harry Markowitz propuso una idea que le ganó el Nobel de Economía en 1990:
+      un portafolio no se juzga activo por activo, sino como un todo — lo que importa no es
+      solo cuánto rinde cada acción, sino cómo se mueven <em>juntas</em>. Este sitio recorre
+      ese proceso completo con datos reales y en vivo: eliges los activos, y cada gráfica de
+      abajo — precios, estadística, simulación, frontera eficiente — se recalcula frente a
+      tus ojos.
+    </p>
+
+    <div class="control-bar">
+      <div class="field">
+        <label for="tickers-input">Tickers (separados por coma)</label>
+        <input id="tickers-input" type="text" value="AAPL, MSFT, GOOGL, AMZN, JPM, XOM, SPY" />
+      </div>
+      <div class="field small">
+        <label for="riskfree-input">Tasa libre de riesgo (% anual)</label>
+        <input id="riskfree-input" type="number" step="0.1" value="4" />
+      </div>
+      <div class="field small">
+        <label for="years-input">Años de histórico</label>
+        <input id="years-input" type="number" step="1" min="2" max="20" value="8" />
+      </div>
+      <button class="primary" id="recalc-btn">Recalcular</button>
+    </div>
+    <div class="status-line" id="status-line">Cargando ejemplo por defecto…</div>
+  </div>
+</header>
+
+<section class="step" id="paso1">
+  <div class="wrap">
+    <div class="step-head"><span class="step-num">PASO 1</span><h2>Selección de activos (stock picking)</h2></div>
+    <div class="grid-2">
+      <div>
+        <p>
+          Todo empieza por elegir un universo de activos candidatos. La tentación natural es
+          escoger "las mejores acciones" — las de mayor retorno esperado. Pero la idea central
+          de Markowitz es contraintuitiva: <strong>un activo mediocre por sí solo puede mejorar
+          un portafolio</strong> si se mueve de forma distinta (poco correlacionada, o incluso
+          negativamente correlacionada) a los demás.
+        </p>
+        <p>
+          Por eso, además del retorno esperado de cada activo, la pieza de información más
+          importante en esta etapa es cómo se correlacionan entre sí — eso se ve en el
+          <a href="#paso3">Paso 3</a>. Prueba cambiando la lista de tickers arriba: por ejemplo,
+          compara un set de acciones tecnológicas muy parecidas entre sí contra un set mezclado
+          con bonos, oro o acciones defensivas.
+        </p>
+      </div>
+      <div class="card">
+        <p style="margin:0"><strong>En este ejemplo</strong></p>
+        <p style="margin-top:8px" id="paso1-ticker-list">—</p>
+        <p style="margin:0; font-size:13.5px;">
+          Los tickers deben existir en <a href="https://stooq.com" target="_blank" rel="noopener">Stooq</a>
+          (fuente de datos de este sitio). Para acciones/ETFs de EE. UU. basta con el símbolo
+          normal (ej. <code>AAPL</code>); para otros mercados usa el sufijo de Stooq (ej.
+          <code>xyz.uk</code>).
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="step" id="paso2">
+  <div class="wrap">
+    <div class="step-head"><span class="step-num">PASO 2</span><h2>Datos históricos y retornos</h2></div>
+    <p>
+      Con los tickers elegidos, se descarga el histórico de precios de cierre diarios y se
+      normaliza a base 100 para poder comparar activos con precios muy distintos en la misma
+      escala. De ahí se calculan los <strong>retornos logarítmicos diarios</strong>
+      (<code>ln(P_t / P_{t-1})</code>), la unidad básica sobre la que se construye todo lo
+      demás — se usan log-retornos porque son aditivos en el tiempo y se comportan mejor
+      estadísticamente que el retorno simple.
+    </p>
+    <div class="card"><div class="plot" id="plot-prices"></div></div>
+  </div>
+</section>
+
+<section class="step" id="paso3">
+  <div class="wrap">
+    <div class="step-head"><span class="step-num">PASO 3</span><h2>Estadística: retorno, riesgo y correlación</h2></div>
+    <p>
+      De los retornos diarios se obtienen tres piezas anualizadas por activo: el
+      <strong>retorno esperado</strong> (el promedio, ×252 días hábiles), la
+      <strong>volatilidad</strong> (la desviación estándar, ×√252) como medida de riesgo, y la
+      <strong>matriz de correlación</strong> entre todos los activos — el ingrediente que hace
+      que la diversificación funcione.
+    </p>
+    <div id="stat-tiles" class="stat-grid"></div>
+    <div class="grid-2">
+      <div class="card">
+        <h3 style="font-size:1rem">Correlación entre activos</h3>
+        <div class="plot short" id="plot-corr"></div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:1rem">Retorno y volatilidad por activo</h3>
+        <div id="stats-table-wrap"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="step" id="paso4">
+  <div class="wrap">
+    <div class="step-head"><span class="step-num">PASO 4</span><h2>La teoría de Markowitz</h2></div>
+    <p>
+      El retorno esperado de un portafolio con pesos <code>w</code> es simplemente el promedio
+      ponderado de los retornos individuales:
+    </p>
+    <div class="formula-block">$$ R_p = \mathbf{w}^\top \boldsymbol{\mu} = \sum_{i=1}^n w_i \, \mu_i $$</div>
+    <p>
+      Pero el riesgo del portafolio <strong>no</strong> es el promedio ponderado de los riesgos
+      individuales — depende de la matriz de covarianza completa <code>Σ</code>, que captura
+      cómo se mueven los activos entre sí:
+    </p>
+    <div class="formula-block">$$ \sigma_p^2 = \mathbf{w}^\top \Sigma \, \mathbf{w} $$</div>
+    <p>El problema de Markowitz consiste en encontrar, para cada nivel de retorno objetivo, los pesos que minimizan esa varianza:</p>
+    <div class="formula-block">
+      $$ \min_{\mathbf{w}} \; \mathbf{w}^\top \Sigma \, \mathbf{w} \quad \text{sujeto a} \quad \mathbf{w}^\top \boldsymbol{\mu} = R_{obj}, \quad \mathbf{w}^\top \mathbf{1} = 1 $$
+    </div>
+    <p>
+      Resolviendo ese problema con multiplicadores de Lagrange se llega a una fórmula cerrada
+      (sin necesidad de un solver numérico) usando cuatro escalares derivados de <code>Σ⁻¹</code>:
+      <code>A = 1ᵀΣ⁻¹1</code>, <code>B = 1ᵀΣ⁻¹μ</code>, <code>C = μᵀΣ⁻¹μ</code> y
+      <code>D = AC − B²</code>. Con ellos, el portafolio óptimo para cualquier retorno objetivo
+      <code>r</code> es:
+    </p>
+    <div class="formula-block">
+      $$ \mathbf{w}(r) = \frac{1}{D}\, \Sigma^{-1} \Big[ (C - Br)\,\mathbf{1} + (Ar - B)\,\boldsymbol{\mu} \Big] $$
+    </div>
+    <p>Este sitio calcula esos escalares con álgebra matricial en el navegador, en vivo, con tus propios activos (código en <code>assets/js/markowitz.js</code>).</p>
+    <div class="callout">
+      <strong>Supuestos del modelo — con honestidad sobre sus límites:</strong> asume que los
+      retornos siguen (aproximadamente) una distribución normal, que media y varianza resumen
+      bien el riesgo, que no hay costos de transacción ni impuestos, y que el inversionista es
+      racional y averso al riesgo. En la práctica los retornos tienen colas más pesadas de lo
+      normal y las correlaciones cambian en crisis — precisamente cuando más importa la
+      diversificación. Es un punto de partida riguroso, no la última palabra.
+    </div>
+  </div>
+</section>
+
+<section class="step" id="paso5">
+  <div class="wrap">
+    <div class="step-head"><span class="step-num">PASO 5</span><h2>Simulación Monte Carlo</h2></div>
+    <p>
+      Antes de resolver la fórmula cerrada, vale la pena <em>verla</em>: se generan miles de
+      portafolios con pesos aleatorios (siempre positivos y sumando 100%, es decir, sin ventas
+      en corto) y se ubica cada uno en un plano de riesgo (eje x) vs. retorno (eje y), coloreado
+      por su Sharpe ratio. Esta nube es un mapa empírico de "qué es posible" con estos activos.
+    </p>
+    <div class="card"><div class="plot" id="plot-montecarlo"></div></div>
+  </div>
+</section>
+
+<section class="step" id="paso6">
+  <div class="wrap">
+    <div class="step-head"><span class="step-num">PASO 6</span><h2>La frontera eficiente</h2></div>
+    <p>
+      La <strong>frontera eficiente</strong> es el borde superior-izquierdo de lo posible: para
+      cada nivel de riesgo, el máximo retorno alcanzable (o, equivalentemente, para cada retorno
+      objetivo, el mínimo riesgo). Aquí se muestran dos versiones sobre la misma nube: la curva
+      <strong>analítica</strong> (fórmula cerrada del Paso 4, que permite ventas en corto — por
+      eso puede "salirse" de la nube) y la <strong>envolvente long-only</strong>, calculada
+      directamente de la simulación (el punto de menor riesgo observado en cada nivel de
+      retorno) — la que de verdad aplica si no puedes o no quieres ir corto.
+    </p>
+    <div class="card"><div class="plot" id="plot-frontier"></div></div>
+  </div>
+</section>
+
+<section class="step" id="paso7">
+  <div class="wrap">
+    <div class="step-head"><span class="step-num">PASO 7</span><h2>Portafolios notables</h2></div>
+    <p>
+      Sobre la frontera hay dos puntos especialmente importantes: el de
+      <strong>mínima varianza</strong> (el portafolio menos riesgoso posible, sin importar el
+      retorno) y el <strong>portafolio tangente</strong> — el que maximiza el Sharpe ratio,
+      donde una línea recta desde la tasa libre de riesgo toca la frontera (la
+      <strong>Capital Market Line</strong>). Según la teoría, todo inversionista racional debería
+      combinar solo dos cosas: el activo libre de riesgo y este portafolio tangente, ajustando
+      la mezcla según su apetito de riesgo.
+    </p>
+    <div id="notable-tiles" class="stat-grid"></div>
+    <div class="grid-2">
+      <div class="card">
+        <h3 style="font-size:1rem">Pesos del portafolio tangente</h3>
+        <div class="plot short" id="plot-tangency-pie"></div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:1rem">Comparación de portafolios</h3>
+        <div id="comparison-table-wrap"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="step" id="paso8">
+  <div class="wrap">
+    <div class="step-head"><span class="step-num">PASO 8</span><h2>Calculadora: elige tu nivel de riesgo</h2></div>
+    <p>
+      Mueve el control para fijar un retorno anual objetivo y observa en vivo qué pesos exactos
+      asigna la fórmula del Paso 4 a cada activo para lograr ese retorno con el mínimo riesgo
+      posible.
+    </p>
+    <div class="slider-row">
+      <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-faint)">Retorno objetivo</span>
+      <input type="range" id="target-return-slider" min="0" max="1" step="0.001" value="0.1" />
+      <span class="slider-value" id="target-return-value">—</span>
+    </div>
+    <div id="target-tiles" class="stat-grid"></div>
+    <div class="card"><div class="plot short" id="plot-target-weights"></div></div>
+  </div>
+</section>
+
+<section class="step" id="limitaciones" style="border-bottom:none">
+  <div class="wrap">
+    <div class="step-head"><span class="step-num">LÍMITES</span><h2>Limitaciones y para seguir leyendo</h2></div>
+    <div class="callout danger">
+      Este sitio es material educativo, no asesoría financiera. Los datos vienen de
+      <a href="https://stooq.com" target="_blank" rel="noopener">Stooq</a> (fuente gratuita, sin
+      garantía de exactitud y con posibles huecos). El retorno esperado se estima como el
+      promedio histórico, que es un predictor pobre del futuro — el modelo optimiza sobre datos
+      pasados, no garantiza resultados futuros. La frontera analítica permite ventas en corto sin
+      límite, lo cual rara vez es realista para un inversionista retail.
+    </div>
+    <p style="margin-top:20px">
+      Para profundizar: Harry Markowitz, <em>"Portfolio Selection"</em>, Journal of Finance
+      (1952) — el paper original; William Sharpe y el modelo CAPM, que extiende esta misma idea
+      a un mercado de equilibrio.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Markowitz Portfolio Lab — proyecto educativo independiente. Datos: Stooq. Cómputo: 100% en
+    el navegador (JavaScript), sin backend de optimización.
+  </div>
+</footer>
+
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="assets/js/linalg.js"></script>
+<script src="assets/js/markowitz.js"></script>
+<script src="assets/js/plots.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

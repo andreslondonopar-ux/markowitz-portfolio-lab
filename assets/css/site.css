@@ -41,13 +41,19 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 @media (max-width: 640px) { .wrap { padding: 0 20px; } }
 
 /* Medida de lectura: el contenedor se ensancha para que gráficas y tarjetas respiren,
-   pero el texto corrido se limita a ~72ch — si no, a pantallas anchas los párrafos
-   estiran las líneas más allá de lo legible. */
+   pero el texto corrido se limita a ~80ch — si no, a pantallas anchas los párrafos
+   estiran las líneas más allá de lo legible. El encabezado de cada sección comparte el
+   mismo ancho que su párrafo (en vez de encabezado ancho + párrafo angosto sueltos),
+   para que se lean como una sola columna editorial — la gráfica/tarjeta de abajo sí
+   rompe a todo el ancho del .wrap. */
 .step .wrap > p,
 .hero p.lead,
+.hero .eyebrow,
+.hero h1,
+.step-head,
 .callout,
 .step .wrap > ul {
-  max-width: 760px;
+  max-width: 880px;
 }
 
 h1, h2, h3 { font-family: var(--font-display); font-weight: 600; text-wrap: balance; margin: 0 0 14px; color: var(--text); }

@@ -172,8 +172,6 @@ const Plots = (() => {
       });
     }
 
-    const annotations = [];
-
     if (minVarPoint) {
       traces.push({
         x: [minVarPoint.vol * 100],
@@ -187,21 +185,6 @@ const Plots = (() => {
           symbol: "diamond",
           line: { color: COLORS.bg, width: 2 },
         },
-      });
-      annotations.push({
-        x: minVarPoint.vol * 100,
-        y: minVarPoint.return * 100,
-        text: "Mín. varianza",
-        showarrow: true,
-        arrowhead: 0,
-        arrowcolor: COLORS.accent2,
-        ax: -60,
-        ay: 30,
-        font: { color: COLORS.accent2, size: 11.5 },
-        bgcolor: COLORS.bg,
-        bordercolor: COLORS.accent2,
-        borderwidth: 1,
-        borderpad: 3,
       });
     }
 
@@ -219,28 +202,12 @@ const Plots = (() => {
           line: { color: COLORS.bg, width: 2 },
         },
       });
-      annotations.push({
-        x: tangencyPoint.vol * 100,
-        y: tangencyPoint.return * 100,
-        text: "Tangente (máx Sharpe)",
-        showarrow: true,
-        arrowhead: 0,
-        arrowcolor: COLORS.accent3,
-        ax: 55,
-        ay: -35,
-        font: { color: COLORS.accent3, size: 11.5 },
-        bgcolor: COLORS.bg,
-        bordercolor: COLORS.accent3,
-        borderwidth: 1,
-        borderpad: 3,
-      });
     }
 
     const layout = baseLayout(null, {
       xaxis: { title: "Volatilidad anualizada (%)", gridcolor: COLORS.grid },
       yaxis: { title: "Retorno esperado anualizado (%)", gridcolor: COLORS.grid },
       margin: { t: 20, r: 40, b: 150, l: 55 },
-      annotations,
       legend: {
         orientation: "h",
         x: 0,

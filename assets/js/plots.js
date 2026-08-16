@@ -176,34 +176,43 @@ const Plots = (() => {
     Plotly.newPlot(el, traces, layout, CONFIG);
   }
 
-  function renderWeightsBar(el, weightTable, colorPositive = COLORS.accent, colorNegative = COLORS.accent3) {
-    const sorted = [...weightTable].sort((a, b) => b.weight - a.weight);
+  // Barra horizontal ordenada por peso — mejor para comparar valores cercanos que un
+  // donut (que además no puede representar posiciones cortas), y mejor que una barra
+  // vertical para leer muchos tickers con sus etiquetas. El color codifica signo
+  // (largo/corto), no identidad del activo — el propio eje ya distingue cada ticker.
+  function renderWeightsHBar(el, weightTable, { threshold = 0.0005 } = {}) {
+    const shown = weightTable.filter((w) => Math.abs(w.weight) > threshold);
+    const sorted = [...shown].sort((a, b) => a.weight - b.weight); // ascendente: Plotly dibuja de abajo hacia arriba
+
+    const barCount = sorted.length;
+    el.style.height = Math.max(220, barCount * 38 + 70) + "px";
+
     const trace = {
-      x: sorted.map((w) => w.ticker),
-      y: sorted.map((w) => w.weight * 100),
+      y: sorted.map((w) => w.ticker),
+      x: sorted.map((w) => w.weight * 100),
       type: "bar",
-      marker: { color: sorted.map((w) => (w.weight >= 0 ? colorPositive : colorNegative)) },
-      hovertemplate: "%{x}: %{y:.1f}%<extra></extra>",
+      orientation: "h",
+      marker: { color: sorted.map((w) => (w.weight >= 0 ? COLORS.accent : COLORS.accent3)) },
+      text: sorted.map((w) => `${(w.weight * 100).toFixed(1)}%`),
+      textposition: "outside",
+      textfont: { color: COLORS.text, size: 12 },
+      cliponaxis: false,
+      hovertemplate: "%{y}: %{x:.1f}%<extra></extra>",
     };
     const layout = baseLayout(null, {
       dragmode: false,
       hovermode: "closest",
-      yaxis: { title: "Peso en el portafolio (%)", gridcolor: COLORS.grid },
+      bargap: 0.35,
+      margin: { t: 20, r: 40, b: 45, l: 60 },
+      xaxis: {
+        title: "Peso en el portafolio (%)",
+        gridcolor: COLORS.grid,
+        zeroline: true,
+        zerolinecolor: COLORS.text,
+        zerolinewidth: 1,
+      },
+      yaxis: { gridcolor: "transparent" },
     });
-    Plotly.newPlot(el, [trace], layout, { ...CONFIG, scrollZoom: false });
-  }
-
-  function renderWeightsPie(el, weightTable) {
-    const positive = weightTable.filter((w) => w.weight > 0.0005);
-    const trace = {
-      labels: positive.map((w) => w.ticker),
-      values: positive.map((w) => w.weight),
-      type: "pie",
-      hole: 0.45,
-      textinfo: "label+percent",
-      marker: { line: { color: COLORS.bg, width: 2 } },
-    };
-    const layout = baseLayout(null, { dragmode: false, showlegend: false });
     Plotly.newPlot(el, [trace], layout, { ...CONFIG, scrollZoom: false });
   }
 
@@ -214,7 +223,6 @@ const Plots = (() => {
     renderNormalizedPrices,
     renderCorrelationHeatmap,
     renderEfficientFrontier,
-    renderWeightsBar,
-    renderWeightsPie,
+    renderWeightsHBar,
   };
 })();

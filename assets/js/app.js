@@ -26,7 +26,7 @@ const MAX_TICKERS = 10;
   const plotMonteCarloEl = el("plot-montecarlo");
   const plotFrontierEl = el("plot-frontier");
   const notableTilesEl = el("notable-tiles");
-  const plotTangencyPieEl = el("plot-tangency-pie");
+  const plotTangencyWeightsEl = el("plot-tangency-weights");
   const comparisonTableWrapEl = el("comparison-table-wrap");
   const targetSlider = el("target-return-slider");
   const targetReturnValueEl = el("target-return-value");
@@ -156,7 +156,7 @@ const MAX_TICKERS = 10;
         <div class="stat-tile"><div class="label">Sharpe</div><div class="value ${sharpe >= 0 ? "up" : "down"}">${fmtNum(sharpe)}</div></div>
       `;
       const weightTable = Markowitz.weightTable(usedTickers, w);
-      Plots.renderWeightsBar(plotTargetWeightsEl, weightTable);
+      Plots.renderWeightsHBar(plotTargetWeightsEl, weightTable);
 
       const shorted = weightTable.filter((t) => t.weight < -0.0005);
       targetShortNoteEl.textContent = shorted.length
@@ -211,7 +211,7 @@ const MAX_TICKERS = 10;
     });
 
     renderNotableTiles(activeMinVarReturn, activeMinVarVol, activeTangencyReturn, activeTangencyVol, activeTangencySharpe, riskFree);
-    Plots.renderWeightsPie(plotTangencyPieEl, Markowitz.weightTable(usedTickers, activeTangencyW));
+    Plots.renderWeightsHBar(plotTangencyWeightsEl, Markowitz.weightTable(usedTickers, activeTangencyW));
     renderComparisonTable(usedTickers, mean, cov, riskFree, activeMinVarW, activeTangencyW);
 
     renderPaso8Callout(isLongOnly);

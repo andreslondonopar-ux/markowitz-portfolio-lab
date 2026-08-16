@@ -232,6 +232,7 @@ table.data-table th { color: var(--text-faint); font-weight: 500; font-size: 12p
 
 /* --- Formula blocks --- */
 .formula-block {
+  max-width: 880px;
   background: var(--bg-panel);
   border: 1px solid var(--line);
   border-left: 3px solid var(--accent);

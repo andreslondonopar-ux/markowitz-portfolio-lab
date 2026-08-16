@@ -147,6 +147,7 @@ body.is-recalculating .step table.data-table {
 
 /* --- Ticker input bar --- */
 .control-bar {
+  max-width: 880px;
   background: var(--bg-panel);
   border: 1px solid var(--line);
   border-radius: var(--radius);

@@ -171,6 +171,57 @@ body.is-recalculating .step table.data-table {
   width: 100%;
 }
 .field.small input { min-width: 90px; }
+
+/* --- Tickers: chips agregados uno a la vez, no un solo campo de texto --- */
+.ticker-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 8px;
+  min-height: 42px;
+  min-width: 260px;
+  width: 100%;
+}
+.ticker-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 3px 4px 3px 10px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.ticker-chip button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  padding: 3px 6px;
+  border-radius: 50%;
+}
+.ticker-chip button:hover { background: rgba(79, 209, 197, 0.22); }
+.ticker-chips input {
+  flex: 1 1 110px;
+  min-width: 110px;
+  width: auto;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  padding: 4px;
+}
 .toggle-field { justify-content: flex-start; }
 .toggle { display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; height: 38px; }
 .toggle input { position: absolute; opacity: 0; width: 0; height: 0; }

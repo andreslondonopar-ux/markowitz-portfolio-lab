@@ -60,8 +60,10 @@
 
     <div class="control-bar">
       <div class="field">
-        <label for="tickers-input">Tickers (separados por coma)</label>
-        <input id="tickers-input" type="text" value="AAPL, MSFT, GOOGL, AMZN, JPM, XOM, SPY" />
+        <label for="ticker-entry">Tickers (uno a la vez — Enter para agregar)</label>
+        <div class="ticker-chips" id="ticker-chips">
+          <input id="ticker-entry" type="text" placeholder="Ej. AAPL" autocomplete="off" spellcheck="false" />
+        </div>
       </div>
       <div class="field small">
         <label for="riskfree-input">Tasa libre de riesgo (% anual)</label>

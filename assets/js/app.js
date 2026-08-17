@@ -10,7 +10,8 @@ const MAX_TICKERS = 10;
 (function () {
   const el = (id) => document.getElementById(id);
 
-  const tickersInput = el("tickers-input");
+  const tickerChipsEl = el("ticker-chips");
+  const tickerEntryInput = el("ticker-entry");
   const riskfreeInput = el("riskfree-input");
   const yearsInput = el("years-input");
   const recalcBtn = el("recalc-btn");
@@ -41,6 +42,7 @@ const MAX_TICKERS = 10;
 
   let state = null; // último pipeline calculado (precios/mean/cov/curvas), para recomputar sin refetch
   let sliderTouched = false; // false = usar un punto de partida representativo; true = respetar la posición del usuario
+  let tickerChips = ["AAPL", "MSFT", "GOOGL", "AMZN", "JPM", "XOM", "SPY"]; // se agregan/quitan uno a la vez
 
   function fmtPct(x, d = 1) {
     return (x * 100).toFixed(d) + "%";
@@ -54,9 +56,6 @@ const MAX_TICKERS = 10;
   function toISO(d) {
     return d.toISOString().slice(0, 10);
   }
-  function parseTickers(str) {
-    return [...new Set(str.split(",").map((s) => s.trim().toUpperCase()).filter(Boolean))];
-  }
   function setStatus(msg, isError = false) {
     statusLineEl.textContent = msg;
     statusLineEl.classList.toggle("error", !!isError);
@@ -64,6 +63,46 @@ const MAX_TICKERS = 10;
   function setBusy(b) {
     recalcBtn.disabled = b;
     document.body.classList.toggle("is-recalculating", b);
+  }
+
+  // --- Tickers: se agregan uno a la vez como chips, no como texto separado por coma ---
+  function renderTickerChips() {
+    tickerChipsEl.querySelectorAll(".ticker-chip").forEach((chip) => chip.remove());
+    tickerChips.forEach((t) => {
+      const chip = document.createElement("span");
+      chip.className = "ticker-chip";
+      chip.textContent = t;
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.setAttribute("aria-label", `Quitar ${t}`);
+      removeBtn.textContent = "×";
+      removeBtn.addEventListener("click", () => {
+        tickerChips = tickerChips.filter((x) => x !== t);
+        renderTickerChips();
+      });
+      chip.appendChild(removeBtn);
+      tickerChipsEl.insertBefore(chip, tickerEntryInput);
+    });
+  }
+
+  function addSingleTicker(raw) {
+    const ticker = raw.trim().toUpperCase();
+    if (!ticker || tickerChips.includes(ticker)) return;
+    if (tickerChips.length >= MAX_TICKERS) {
+      setStatus(
+        `Máximo ${MAX_TICKERS} tickers — la optimización long-only prueba todas las combinaciones posibles y crece rápido con cada activo adicional.`,
+        true
+      );
+      return;
+    }
+    tickerChips.push(ticker);
+  }
+
+  // Acepta un solo ticker o varios separados por coma (ej. si se pega una lista) — cada
+  // uno se agrega como chip individual, igual que si se hubieran escrito uno a la vez.
+  function addTickersFromRaw(raw) {
+    raw.split(",").map((s) => s.trim()).filter(Boolean).forEach(addSingleTicker);
+    renderTickerChips();
   }
 
   function renderStatTiles(tickers, mean, cov) {
@@ -254,9 +293,14 @@ const MAX_TICKERS = 10;
   }
 
   async function runPipeline() {
-    const tickers = parseTickers(tickersInput.value);
+    // Si quedó texto sin confirmar en el campo (el usuario no presionó Enter), lo agregamos.
+    if (tickerEntryInput.value.trim()) {
+      addTickersFromRaw(tickerEntryInput.value);
+      tickerEntryInput.value = "";
+    }
+    const tickers = tickerChips.slice();
     if (tickers.length < 2) {
-      setStatus("Ingresa al menos 2 tickers separados por coma.", true);
+      setStatus("Agrega al menos 2 tickers.", true);
       return;
     }
     if (tickers.length > MAX_TICKERS) {
@@ -347,14 +391,28 @@ const MAX_TICKERS = 10;
   }
 
   recalcBtn.addEventListener("click", runPipeline);
-  tickersInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") runPipeline();
+  tickerEntryInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addTickersFromRaw(tickerEntryInput.value);
+      tickerEntryInput.value = "";
+    } else if (e.key === "Backspace" && tickerEntryInput.value === "" && tickerChips.length > 0) {
+      tickerChips.pop();
+      renderTickerChips();
+    }
+  });
+  tickerEntryInput.addEventListener("blur", () => {
+    if (tickerEntryInput.value.trim()) {
+      addTickersFromRaw(tickerEntryInput.value);
+      tickerEntryInput.value = "";
+    }
   });
   allowShortToggle.addEventListener("change", renderDownstream);
   setupTableToggle(tangencyTableToggle, tangencyTableWrap);
   setupTableToggle(targetTableToggle, targetTableWrap);
 
   document.addEventListener("DOMContentLoaded", () => {
+    renderTickerChips();
     if (window.renderMathInElement) {
       window.renderMathInElement(document.body, {
         delimiters: [

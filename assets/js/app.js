@@ -4,6 +4,9 @@
 // Escenario base = long-only (sin ventas en corto), que es el caso realista para la
 // mayoría de portafolios. El interruptor "Permitir shorting" recalcula Paso 6-8 con la
 // fórmula analítica sin restricción — sin volver a pedir precios, reutilizando `state`.
+//
+// Bilingüe (ES/EN, ver assets/js/i18n.js): todo el texto generado aquí pasa por I18N.t()
+// en vez de estar hardcodeado, para que cambiar de idioma no requiera volver a pedir datos.
 
 const MAX_TICKERS = 10;
 
@@ -18,6 +21,7 @@ const MAX_TICKERS = 10;
   const statusLineEl = el("status-line");
   const allowShortToggle = el("allow-short-toggle");
   const allowShortLabel = el("allow-short-label");
+  const langToggleBtn = el("lang-toggle");
 
   const paso1List = el("paso1-ticker-list");
   const plotPricesEl = el("plot-prices");
@@ -74,7 +78,7 @@ const MAX_TICKERS = 10;
       chip.textContent = t;
       const removeBtn = document.createElement("button");
       removeBtn.type = "button";
-      removeBtn.setAttribute("aria-label", `Quitar ${t}`);
+      removeBtn.setAttribute("aria-label", I18N.t("app.removeTicker", { ticker: t }));
       removeBtn.textContent = "×";
       removeBtn.addEventListener("click", () => {
         tickerChips = tickerChips.filter((x) => x !== t);
@@ -89,10 +93,7 @@ const MAX_TICKERS = 10;
     const ticker = raw.trim().toUpperCase();
     if (!ticker || tickerChips.includes(ticker)) return;
     if (tickerChips.length >= MAX_TICKERS) {
-      setStatus(
-        `Máximo ${MAX_TICKERS} tickers — la optimización long-only prueba todas las combinaciones posibles y crece rápido con cada activo adicional.`,
-        true
-      );
+      setStatus(I18N.t("app.maxTickersError", { n: MAX_TICKERS }), true);
       return;
     }
     tickerChips.push(ticker);
@@ -110,7 +111,7 @@ const MAX_TICKERS = 10;
       .map((t, i) => {
         const ret = mean[i];
         const vol = Math.sqrt(cov[i][i]);
-        return `<div class="stat-tile"><div class="label">${t}</div><div class="value ${ret >= 0 ? "up" : "down"}">${fmtPct(ret)}</div><div style="font-size:12px;color:var(--text-faint)">vol ${fmtPct(vol)}</div></div>`;
+        return `<div class="stat-tile"><div class="label">${t}</div><div class="value ${ret >= 0 ? "up" : "down"}">${fmtPct(ret)}</div><div style="font-size:12px;color:var(--text-faint)">${I18N.t("app.statVol")} ${fmtPct(vol)}</div></div>`;
       })
       .join("");
   }
@@ -119,17 +120,17 @@ const MAX_TICKERS = 10;
     const rows = tickers
       .map((t, i) => `<tr><td>${t}</td><td>${fmtPct(mean[i])}</td><td>${fmtPct(Math.sqrt(cov[i][i]))}</td></tr>`)
       .join("");
-    statsTableWrapEl.innerHTML = `<table class="data-table"><thead><tr><th>Activo</th><th>Retorno esp.</th><th>Volatilidad</th></tr></thead><tbody>${rows}</tbody></table>`;
+    statsTableWrapEl.innerHTML = `<table class="data-table"><thead><tr><th>${I18N.t("app.tableAsset")}</th><th>${I18N.t("app.tableExpReturn")}</th><th>${I18N.t("app.tableVolatility")}</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
 
   function renderNotableTiles(minVarReturn, minVarVol, tanReturn, tanVol, tanSharpe, riskFree) {
     notableTilesEl.innerHTML = `
-      <div class="stat-tile"><div class="label">Mín. varianza · retorno</div><div class="value">${fmtPct(minVarReturn)}</div></div>
-      <div class="stat-tile"><div class="label">Mín. varianza · vol</div><div class="value">${fmtPct(minVarVol)}</div></div>
-      <div class="stat-tile"><div class="label">Tangente · retorno</div><div class="value up">${fmtPct(tanReturn)}</div></div>
-      <div class="stat-tile"><div class="label">Tangente · vol</div><div class="value">${fmtPct(tanVol)}</div></div>
-      <div class="stat-tile"><div class="label">Tangente · Sharpe</div><div class="value ${tanSharpe >= 0 ? "up" : "down"}">${fmtNum(tanSharpe)}</div></div>
-      <div class="stat-tile"><div class="label">Tasa libre de riesgo</div><div class="value">${fmtPct(riskFree)}</div></div>
+      <div class="stat-tile"><div class="label">${I18N.t("app.notableMinVarReturn")}</div><div class="value">${fmtPct(minVarReturn)}</div></div>
+      <div class="stat-tile"><div class="label">${I18N.t("app.notableMinVarVol")}</div><div class="value">${fmtPct(minVarVol)}</div></div>
+      <div class="stat-tile"><div class="label">${I18N.t("app.notableTanReturn")}</div><div class="value up">${fmtPct(tanReturn)}</div></div>
+      <div class="stat-tile"><div class="label">${I18N.t("app.notableTanVol")}</div><div class="value">${fmtPct(tanVol)}</div></div>
+      <div class="stat-tile"><div class="label">${I18N.t("app.notableTanSharpe")}</div><div class="value ${tanSharpe >= 0 ? "up" : "down"}">${fmtNum(tanSharpe)}</div></div>
+      <div class="stat-tile"><div class="label">${I18N.t("app.notableRiskFree")}</div><div class="value">${fmtPct(riskFree)}</div></div>
     `;
   }
 
@@ -137,9 +138,9 @@ const MAX_TICKERS = 10;
     const n = tickers.length;
     const equalW = new Array(n).fill(1 / n);
     const portfolios = [
-      { name: "Equal-weight", w: equalW },
-      { name: "Mínima varianza", w: minVarW },
-      { name: "Tangente (máx Sharpe)", w: tanW },
+      { name: I18N.t("app.portfolioEqualWeight"), w: equalW },
+      { name: I18N.t("app.portfolioMinVar"), w: minVarW },
+      { name: I18N.t("app.portfolioTangency"), w: tanW },
     ];
     const rows = portfolios
       .map((p) => {
@@ -149,7 +150,7 @@ const MAX_TICKERS = 10;
         return `<tr><td>${p.name}</td><td>${fmtPct(ret)}</td><td>${fmtPct(vol)}</td><td>${fmtNum(sharpe)}</td></tr>`;
       })
       .join("");
-    comparisonTableWrapEl.innerHTML = `<table class="data-table"><thead><tr><th>Portafolio</th><th>Retorno</th><th>Vol</th><th>Sharpe</th></tr></thead><tbody>${rows}</tbody></table>`;
+    comparisonTableWrapEl.innerHTML = `<table class="data-table"><thead><tr><th>${I18N.t("app.tablePortfolio")}</th><th>${I18N.t("app.tableReturn")}</th><th>${I18N.t("app.tableVol")}</th><th>${I18N.t("app.tableSharpe")}</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
 
   function renderWeightsTable(wrapEl, weightTable) {
@@ -157,7 +158,7 @@ const MAX_TICKERS = 10;
     const rows = sorted
       .map((w) => `<tr><td>${w.ticker}</td><td>${fmtPct(w.weight)}</td></tr>`)
       .join("");
-    wrapEl.innerHTML = `<table class="data-table"><thead><tr><th>Activo</th><th>Peso</th></tr></thead><tbody>${rows}</tbody></table>`;
+    wrapEl.innerHTML = `<table class="data-table"><thead><tr><th>${I18N.t("app.tableAsset")}</th><th>${I18N.t("app.tableWeight")}</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
 
   function setupTableToggle(btn, wrapEl) {
@@ -165,22 +166,12 @@ const MAX_TICKERS = 10;
       const isHidden = wrapEl.hasAttribute("hidden");
       if (isHidden) wrapEl.removeAttribute("hidden");
       else wrapEl.setAttribute("hidden", "");
-      btn.textContent = isHidden ? "Ocultar tabla" : "Ver como tabla";
+      btn.textContent = isHidden ? I18N.t("app.hideTable") : I18N.t("app.viewTable");
     });
   }
 
   function renderPaso8Callout(isLongOnly) {
-    paso8CalloutEl.innerHTML = isLongOnly
-      ? `<strong>Escenario base: sin ventas en corto.</strong> Todos los pesos aquí son ≥ 0 —
-         se probaron todas las combinaciones de activos posibles y se tomó la de menor riesgo
-         para cada retorno objetivo. Activa <strong>"Permitir shorting"</strong> arriba si
-         quieres ver la versión teórica sin restricción (Paso 4), que puede pedir posiciones
-         negativas.`
-      : `<strong>Shorting activado.</strong> Esta calculadora ahora usa la fórmula
-         <em>analítica</em> sin restricción del Paso 4. Un peso negativo significa vender ese
-         activo en corto para financiar una posición más grande en los demás — no es un error,
-         es lo que implica quitar la restricción de no-negatividad. Desactiva el interruptor de
-         arriba para volver al escenario base (long-only).`;
+    paso8CalloutEl.innerHTML = I18N.t(isLongOnly ? "app.paso8CalloutLongOnly" : "app.paso8CalloutShort");
   }
 
   function setupTargetSlider({ mean, cov, usedTickers, riskFree, isLongOnly, coeffs, minVarReturn, maxReturn, defaultReturn }) {
@@ -206,15 +197,15 @@ const MAX_TICKERS = 10;
       try {
         w = solve(r);
       } catch (e) {
-        targetShortNoteEl.textContent = e.message || "No se pudo resolver este punto.";
+        targetShortNoteEl.textContent = e.message || I18N.t("app.couldNotSolve");
         return;
       }
       const vol = Markowitz.portfolioVol(w, cov);
       const sharpe = Markowitz.sharpeRatio(r, vol, riskFree);
       targetTilesEl.innerHTML = `
-        <div class="stat-tile"><div class="label">Retorno objetivo</div><div class="value">${fmtPct(r)}</div></div>
-        <div class="stat-tile"><div class="label">Riesgo resultante</div><div class="value">${fmtPct(vol)}</div></div>
-        <div class="stat-tile"><div class="label">Sharpe</div><div class="value ${sharpe >= 0 ? "up" : "down"}">${fmtNum(sharpe)}</div></div>
+        <div class="stat-tile"><div class="label">${I18N.t("app.targetReturn")}</div><div class="value">${fmtPct(r)}</div></div>
+        <div class="stat-tile"><div class="label">${I18N.t("app.targetVol")}</div><div class="value">${fmtPct(vol)}</div></div>
+        <div class="stat-tile"><div class="label">${I18N.t("app.tableSharpe")}</div><div class="value ${sharpe >= 0 ? "up" : "down"}">${fmtNum(sharpe)}</div></div>
       `;
       const weightTable = Markowitz.weightTable(usedTickers, w);
       Plots.renderWeightsHBar(plotTargetWeightsEl, weightTable);
@@ -222,8 +213,8 @@ const MAX_TICKERS = 10;
 
       const shorted = weightTable.filter((t) => t.weight < -0.0005);
       targetShortNoteEl.textContent = shorted.length
-        ? `Este portafolio vende en corto: ${shorted.map((t) => `${t.ticker} (${fmtPct(t.weight)})`).join(", ")}.`
-        : "Este portafolio no requiere ventas en corto — todos los pesos son ≥ 0.";
+        ? I18N.t("app.shortNote", { list: shorted.map((t) => `${t.ticker} (${fmtPct(t.weight)})`).join(", ") })
+        : I18N.t("app.noShortNote");
     }
 
     targetSlider.oninput = () => {
@@ -242,7 +233,7 @@ const MAX_TICKERS = 10;
     if (!state) return;
     const { usedTickers, mean, cov, riskFree, cloud, coeffs, analyticCurve, minVarW, tangencyW, loFrontier } = state;
     const isLongOnly = !allowShortToggle.checked;
-    allowShortLabel.textContent = isLongOnly ? "Long-only (base)" : "Con shorting";
+    allowShortLabel.textContent = I18N.t(isLongOnly ? "app.scenarioLongOnly" : "app.scenarioShort");
 
     const activeMinVarW = isLongOnly ? loFrontier.minVarPoint.weights : minVarW;
     const activeMinVarReturn = isLongOnly ? loFrontier.minVarPoint.return : Markowitz.portfolioReturn(minVarW, mean);
@@ -292,6 +283,34 @@ const MAX_TICKERS = 10;
     });
   }
 
+  function readyStatusMessage() {
+    const { usedTickers, dates, warn } = state;
+    return (
+      I18N.t("app.ready", {
+        n: usedTickers.length,
+        n2: dates.length,
+        d1: dates[0],
+        d2: dates[dates.length - 1],
+      }) + (warn || "")
+    );
+  }
+
+  // Vuelve a dibujar todo (Paso 2, 3, 5, 6, 7, 8) a partir de `state` ya calculado — se usa
+  // tanto al terminar el pipeline como al cambiar de idioma (sin pedir precios de nuevo).
+  function renderFromState() {
+    if (!state) return;
+    const { usedTickers, dates, prices, mean, cov, corr, cloud } = state;
+
+    paso1List.textContent = usedTickers.join(", ");
+    Plots.renderNormalizedPrices(plotPricesEl, usedTickers, dates, prices);
+    renderStatTiles(usedTickers, mean, cov);
+    Plots.renderCorrelationHeatmap(plotCorrEl, usedTickers, corr);
+    renderStatsTable(usedTickers, mean, cov);
+    Plots.renderEfficientFrontier(plotMonteCarloEl, { cloud });
+    renderDownstream();
+    setStatus(readyStatusMessage());
+  }
+
   async function runPipeline() {
     // Si quedó texto sin confirmar en el campo (el usuario no presionó Enter), lo agregamos.
     if (tickerEntryInput.value.trim()) {
@@ -300,16 +319,16 @@ const MAX_TICKERS = 10;
     }
     const tickers = tickerChips.slice();
     if (tickers.length < 2) {
-      setStatus("Agrega al menos 2 tickers.", true);
+      setStatus(I18N.t("app.needTwoTickers"), true);
       return;
     }
     if (tickers.length > MAX_TICKERS) {
-      setStatus(`Máximo ${MAX_TICKERS} tickers — la optimización long-only prueba todas las combinaciones posibles y crece rápido con cada activo adicional.`, true);
+      setStatus(I18N.t("app.maxTickersError", { n: MAX_TICKERS }), true);
       return;
     }
 
     setBusy(true);
-    setStatus(`Descargando precios de ${tickers.join(", ")}…`);
+    setStatus(I18N.t("app.downloading", { list: tickers.join(", ") }));
 
     try {
       const years = clamp(parseInt(yearsInput.value, 10) || 8, 2, 20);
@@ -319,26 +338,25 @@ const MAX_TICKERS = 10;
 
       const res = await fetch(url);
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Error al consultar precios");
+      if (!res.ok) throw new Error(json.error || I18N.t("app.priceFetchError"));
 
       const data = json.data || {};
       const errors = json.errors || {};
       const okTickers = Object.keys(data);
       const failedTickers = Object.keys(errors);
       const warn = failedTickers.length
-        ? ` (omitidos: ${failedTickers.map((t) => `${t} — ${errors[t]}`).join(", ")})`
+        ? I18N.t("app.omitted", { list: failedTickers.map((t) => `${t} — ${errors[t]}`).join(", ") })
         : "";
 
       if (okTickers.length < 2) {
         throw new Error(
-          "No hay suficientes tickers válidos. " +
-            Object.entries(errors).map(([t, e]) => `${t}: ${e}`).join(" | ")
+          I18N.t("app.notEnoughValid") + Object.entries(errors).map(([t, e]) => `${t}: ${e}`).join(" | ")
         );
       }
 
       const aligned = Markowitz.alignPrices(data);
       if (aligned.dates.length < 60) {
-        throw new Error("Muy pocas fechas en común entre los activos elegidos." + warn);
+        throw new Error(I18N.t("app.tooFewDates") + warn);
       }
 
       const { tickers: usedTickers, dates, prices } = aligned;
@@ -349,42 +367,28 @@ const MAX_TICKERS = 10;
       const riskFree = (parseFloat(riskfreeInput.value) || 0) / 100;
       sliderTouched = false; // dataset nuevo: arrancar el slider en un punto representativo de nuevo
 
-      paso1List.textContent = usedTickers.join(", ");
-
-      Plots.renderNormalizedPrices(plotPricesEl, usedTickers, dates, prices);
-
-      renderStatTiles(usedTickers, mean, cov);
-      Plots.renderCorrelationHeatmap(plotCorrEl, usedTickers, corr);
-      renderStatsTable(usedTickers, mean, cov);
-
       let coeffs;
       try {
         coeffs = Markowitz.analyticFrontierCoeffs(mean, cov);
       } catch (e) {
-        throw new Error("No se pudo invertir la matriz de covarianza: " + e.message);
+        throw new Error(I18N.t("app.covInvertError") + e.message);
       }
 
       const cloud = Markowitz.monteCarloSimulate(mean, cov, riskFree, 4000);
-      Plots.renderEfficientFrontier(plotMonteCarloEl, { cloud });
 
       const { points: analyticCurve } = Markowitz.analyticFrontierCurve(mean, cov, 150);
       const minVarW = Markowitz.minVarianceWeights(mean, cov, coeffs);
       const tangencyW = Markowitz.tangencyWeights(mean, cov, riskFree);
 
-      setStatus(`Calculando la frontera long-only exacta para ${usedTickers.length} activos…`);
+      setStatus(I18N.t("app.computingFrontier", { n: usedTickers.length }));
       // Resolución adaptativa: la búsqueda long-only prueba 2^n combinaciones por punto.
       const loPoints = usedTickers.length <= 6 ? 150 : usedTickers.length <= 8 ? 100 : 60;
       const loFrontier = Markowitz.longOnlyFrontierCurve(mean, cov, riskFree, loPoints);
 
-      state = { usedTickers, dates, mean, cov, riskFree, cloud, coeffs, analyticCurve, minVarW, tangencyW, loFrontier };
-      renderDownstream();
-
-      setStatus(
-        `Listo — ${usedTickers.length} activos, ${dates.length} observaciones diarias (${dates[0]} → ${dates[dates.length - 1]}).` +
-          warn
-      );
+      state = { usedTickers, dates, prices, mean, cov, corr, riskFree, cloud, coeffs, analyticCurve, minVarW, tangencyW, loFrontier, warn };
+      renderFromState();
     } catch (err) {
-      setStatus(err.message || "Error inesperado.", true);
+      setStatus(err.message || I18N.t("app.unexpectedError"), true);
     } finally {
       setBusy(false);
     }
@@ -411,7 +415,32 @@ const MAX_TICKERS = 10;
   setupTableToggle(tangencyTableToggle, tangencyTableWrap);
   setupTableToggle(targetTableToggle, targetTableWrap);
 
+  langToggleBtn.addEventListener("click", () => {
+    const next = I18N.getLocale() === "es" ? "en" : "es";
+    I18N.setLocale(next);
+    langToggleBtn.textContent = next === "es" ? "EN" : "ES";
+    renderTickerChips(); // los aria-label "Quitar X" / "Remove X" cambian de idioma
+    // La fórmula con "sujeto a"/"subject to" quedó en texto crudo tras la traducción —
+    // hay que pedirle a KaTeX que la vuelva a renderizar (las demás fórmulas ya
+    // renderizadas no tienen data-i18n, así que no se tocan ni se vuelven a procesar).
+    if (window.renderMathInElement) {
+      window.renderMathInElement(document.body, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "\\(", right: "\\)", display: false },
+        ],
+      });
+    }
+    if (state) {
+      renderFromState();
+    } else {
+      setStatus(I18N.t("controls.loadingDefault"));
+    }
+  });
+
   document.addEventListener("DOMContentLoaded", () => {
+    I18N.applyStaticTranslations();
+    langToggleBtn.textContent = I18N.getLocale() === "es" ? "EN" : "ES";
     renderTickerChips();
     if (window.renderMathInElement) {
       window.renderMathInElement(document.body, {

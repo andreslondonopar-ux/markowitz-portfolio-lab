@@ -31,25 +31,27 @@
   <div class="wrap">
     <div class="brand">Markowitz<span>Lab</span></div>
     <nav>
-      <a href="#intro">Intro</a>
-      <a href="#paso1">1. Activos</a>
-      <a href="#paso2">2. Datos</a>
-      <a href="#paso3">3. Estadística</a>
-      <a href="#paso4">4. Teoría</a>
-      <a href="#paso5">5. Monte Carlo</a>
-      <a href="#paso6">6. Frontera</a>
-      <a href="#paso7">7. Portafolios</a>
-      <a href="#paso8">8. Calculadora</a>
-      <a href="#limitaciones">Límites</a>
+      <a href="#intro" data-i18n="nav.intro">Intro</a>
+      <a href="#paso1" data-i18n="nav.paso1">1. Activos</a>
+      <a href="#paso2" data-i18n="nav.paso2">2. Datos</a>
+      <a href="#paso3" data-i18n="nav.paso3">3. Estadística</a>
+      <a href="#paso4" data-i18n="nav.paso4">4. Teoría</a>
+      <a href="#paso5" data-i18n="nav.paso5">5. Monte Carlo</a>
+      <a href="#paso6" data-i18n="nav.paso6">6. Frontera</a>
+      <a href="#paso7" data-i18n="nav.paso7">7. Portafolios</a>
+      <a href="#paso8" data-i18n="nav.paso8">8. Calculadora</a>
+      <a href="#limitaciones" data-i18n="nav.limites">Límites</a>
+      <a href="#creador" data-i18n="nav.creador">Creador</a>
     </nav>
+    <button type="button" id="lang-toggle" class="lang-toggle" aria-label="Switch language / Cambiar idioma">EN</button>
   </div>
 </div>
 
 <header class="hero" id="intro">
   <div class="wrap">
-    <p class="eyebrow">Proyecto educativo · Teoría Moderna de Portafolios</p>
-    <h1>Optimización de portafolios de Markowitz, paso a paso</h1>
-    <p class="lead">
+    <p class="eyebrow" data-i18n="hero.eyebrow">Proyecto educativo · Teoría Moderna de Portafolios</p>
+    <h1 data-i18n="hero.h1">Optimización de portafolios de Markowitz, paso a paso</h1>
+    <p class="lead" data-i18n="hero.lead">
       En 1952, Harry Markowitz propuso una idea que le ganó el Nobel de Economía en 1990:
       un portafolio no se juzga activo por activo, sino como un todo — lo que importa no es
       solo cuánto rinde cada acción, sino cómo se mueven <em>juntas</em>. Este sitio recorre
@@ -60,31 +62,31 @@
 
     <div class="control-bar">
       <div class="field">
-        <label for="ticker-entry">Tickers (uno a la vez — Enter para agregar)</label>
+        <label for="ticker-entry" data-i18n="controls.tickersLabel">Tickers (uno a la vez — Enter para agregar)</label>
         <div class="ticker-chips" id="ticker-chips">
-          <input id="ticker-entry" type="text" placeholder="Ej. AAPL" autocomplete="off" spellcheck="false" />
+          <input id="ticker-entry" type="text" data-i18n-placeholder="controls.tickerPlaceholder" placeholder="Ej. AAPL" autocomplete="off" spellcheck="false" />
         </div>
       </div>
       <div class="field small">
-        <label for="riskfree-input">Tasa libre de riesgo (% anual)</label>
+        <label for="riskfree-input" data-i18n="controls.riskfreeLabel">Tasa libre de riesgo (% anual)</label>
         <input id="riskfree-input" type="number" step="0.1" value="4" />
       </div>
       <div class="field small">
-        <label for="years-input">Años de histórico</label>
+        <label for="years-input" data-i18n="controls.yearsLabel">Años de histórico</label>
         <input id="years-input" type="number" step="1" min="2" max="20" value="8" />
       </div>
       <div class="field toggle-field">
-        <label for="allow-short-toggle">Escenario</label>
+        <label for="allow-short-toggle" data-i18n="controls.scenarioLabel">Escenario</label>
         <label class="toggle">
           <input type="checkbox" id="allow-short-toggle" />
           <span class="toggle-track"><span class="toggle-thumb"></span></span>
           <span class="toggle-label" id="allow-short-label">Long-only (base)</span>
         </label>
       </div>
-      <button class="primary" id="recalc-btn">Recalcular</button>
+      <button class="primary" id="recalc-btn" data-i18n="controls.recalcBtn">Recalcular</button>
     </div>
-    <div class="status-line" id="status-line">Cargando ejemplo por defecto…</div>
-    <p style="font-size:13px; color:var(--text-faint); margin-top:10px; max-width:700px;">
+    <div class="status-line" id="status-line" data-i18n="controls.loadingDefault">Cargando ejemplo por defecto…</div>
+    <p style="font-size:13px; color:var(--text-faint); margin-top:10px; max-width:700px;" data-i18n="controls.maxTickersHint">
       Máximo 10 tickers (la optimización long-only prueba combinaciones de activos, y crece
       rápido con cada uno adicional).
     </p>
@@ -93,17 +95,17 @@
 
 <section class="step" id="paso1">
   <div class="wrap">
-    <div class="step-head"><span class="step-num">PASO 1</span><h2>Selección de activos (stock picking)</h2></div>
+    <div class="step-head"><span class="step-num" data-i18n="paso1.badge">PASO 1</span><h2 data-i18n="paso1.title">Selección de activos (stock picking)</h2></div>
     <div class="grid-2">
       <div>
-        <p>
+        <p data-i18n="paso1.p1">
           Todo empieza por elegir un universo de activos candidatos. La tentación natural es
           escoger "las mejores acciones" — las de mayor retorno esperado. Pero la idea central
           de Markowitz es contraintuitiva: <strong>un activo mediocre por sí solo puede mejorar
           un portafolio</strong> si se mueve de forma distinta (poco correlacionada, o incluso
           negativamente correlacionada) a los demás.
         </p>
-        <p>
+        <p data-i18n="paso1.p2">
           Por eso, además del retorno esperado de cada activo, la pieza de información más
           importante en esta etapa es cómo se correlacionan entre sí — eso se ve en el
           <a href="#paso3">Paso 3</a>. Prueba cambiando la lista de tickers arriba: por ejemplo,
@@ -112,9 +114,9 @@
         </p>
       </div>
       <div class="card">
-        <p style="margin:0"><strong>En este ejemplo</strong></p>
+        <p style="margin:0"><strong data-i18n="paso1.exampleTitle">En este ejemplo</strong></p>
         <p style="margin-top:8px" id="paso1-ticker-list">—</p>
-        <p style="margin:0; font-size:13.5px;">
+        <p style="margin:0; font-size:13.5px;" data-i18n="paso1.tickerHelp">
           Los tickers deben existir en Yahoo Finance (fuente de datos de este sitio). Para
           acciones/ETFs de EE. UU. basta con el símbolo normal (ej. <code>AAPL</code>); para
           otros mercados usa el sufijo de Yahoo Finance (ej. <code>SAP.DE</code>).
@@ -126,8 +128,8 @@
 
 <section class="step" id="paso2">
   <div class="wrap">
-    <div class="step-head"><span class="step-num">PASO 2</span><h2>Datos históricos y retornos</h2></div>
-    <p>
+    <div class="step-head"><span class="step-num" data-i18n="paso2.badge">PASO 2</span><h2 data-i18n="paso2.title">Datos históricos y retornos</h2></div>
+    <p data-i18n="paso2.p">
       Con los tickers elegidos, se descarga el histórico de precios de cierre diarios y se
       normaliza a base 100 para poder comparar activos con precios muy distintos en la misma
       escala. De ahí se calculan los <strong>retornos logarítmicos diarios</strong>
@@ -141,8 +143,8 @@
 
 <section class="step" id="paso3">
   <div class="wrap">
-    <div class="step-head"><span class="step-num">PASO 3</span><h2>Estadística: retorno, riesgo y correlación</h2></div>
-    <p>
+    <div class="step-head"><span class="step-num" data-i18n="paso3.badge">PASO 3</span><h2 data-i18n="paso3.title">Estadística: retorno, riesgo y correlación</h2></div>
+    <p data-i18n="paso3.p">
       De los retornos diarios se obtienen tres piezas anualizadas por activo: el
       <strong>retorno esperado</strong> (el promedio, ×252 días hábiles), la
       <strong>volatilidad</strong> (la desviación estándar, ×√252) como medida de riesgo, y la
@@ -152,11 +154,11 @@
     <div id="stat-tiles" class="stat-grid"></div>
     <div class="grid-2">
       <div class="card">
-        <h3 style="font-size:1rem">Correlación entre activos</h3>
+        <h3 style="font-size:1rem" data-i18n="paso3.corrTitle">Correlación entre activos</h3>
         <div class="plot short" id="plot-corr"></div>
       </div>
       <div class="card">
-        <h3 style="font-size:1rem">Retorno y volatilidad por activo</h3>
+        <h3 style="font-size:1rem" data-i18n="paso3.statsTitle">Retorno y volatilidad por activo</h3>
         <div id="stats-table-wrap"></div>
       </div>
     </div>
@@ -165,23 +167,23 @@
 
 <section class="step" id="paso4">
   <div class="wrap">
-    <div class="step-head"><span class="step-num">PASO 4</span><h2>La teoría de Markowitz</h2></div>
-    <p>
+    <div class="step-head"><span class="step-num" data-i18n="paso4.badge">PASO 4</span><h2 data-i18n="paso4.title">La teoría de Markowitz</h2></div>
+    <p data-i18n="paso4.p1">
       El retorno esperado de un portafolio con pesos <code>w</code> es simplemente el promedio
       ponderado de los retornos individuales:
     </p>
     <div class="formula-block">$$ R_p = \mathbf{w}^\top \boldsymbol{\mu} = \sum_{i=1}^n w_i \, \mu_i $$</div>
-    <p>
+    <p data-i18n="paso4.p2">
       Pero el riesgo del portafolio <strong>no</strong> es el promedio ponderado de los riesgos
       individuales — depende de la matriz de covarianza completa <code>Σ</code>, que captura
       cómo se mueven los activos entre sí:
     </p>
     <div class="formula-block">$$ \sigma_p^2 = \mathbf{w}^\top \Sigma \, \mathbf{w} $$</div>
-    <p>El problema de Markowitz consiste en encontrar, para cada nivel de retorno objetivo, los pesos que minimizan esa varianza:</p>
-    <div class="formula-block">
+    <p data-i18n="paso4.p3">El problema de Markowitz consiste en encontrar, para cada nivel de retorno objetivo, los pesos que minimizan esa varianza:</p>
+    <div class="formula-block" data-i18n="paso4.constraintFormula">
       $$ \min_{\mathbf{w}} \; \mathbf{w}^\top \Sigma \, \mathbf{w} \quad \text{sujeto a} \quad \mathbf{w}^\top \boldsymbol{\mu} = R_{obj}, \quad \mathbf{w}^\top \mathbf{1} = 1 $$
     </div>
-    <p>
+    <p data-i18n="paso4.p4">
       Resolviendo ese problema con multiplicadores de Lagrange se llega a una fórmula cerrada
       (sin necesidad de un solver numérico) usando cuatro escalares derivados de <code>Σ⁻¹</code>:
       <code>A = 1ᵀΣ⁻¹1</code>, <code>B = 1ᵀΣ⁻¹μ</code>, <code>C = μᵀΣ⁻¹μ</code> y
@@ -191,8 +193,8 @@
     <div class="formula-block">
       $$ \mathbf{w}(r) = \frac{1}{D}\, \Sigma^{-1} \Big[ (C - Br)\,\mathbf{1} + (Ar - B)\,\boldsymbol{\mu} \Big] $$
     </div>
-    <p>Este sitio calcula esos escalares con álgebra matricial en el navegador, en vivo, con tus propios activos (código en <code>assets/js/markowitz.js</code>).</p>
-    <div class="callout">
+    <p data-i18n="paso4.p5">Este sitio calcula esos escalares con álgebra matricial en el navegador, en vivo, con tus propios activos (código en <code>assets/js/markowitz.js</code>).</p>
+    <div class="callout" data-i18n="paso4.assumptions">
       <strong>Supuestos del modelo — con honestidad sobre sus límites:</strong> asume que los
       retornos siguen (aproximadamente) una distribución normal, que media y varianza resumen
       bien el riesgo, que no hay costos de transacción ni impuestos, y que el inversionista es
@@ -205,8 +207,8 @@
 
 <section class="step" id="paso5">
   <div class="wrap">
-    <div class="step-head"><span class="step-num">PASO 5</span><h2>Simulación Monte Carlo</h2></div>
-    <p>
+    <div class="step-head"><span class="step-num" data-i18n="paso5.badge">PASO 5</span><h2 data-i18n="paso5.title">Simulación Monte Carlo</h2></div>
+    <p data-i18n="paso5.p">
       Antes de resolver la fórmula cerrada, vale la pena <em>verla</em>: se generan miles de
       portafolios con pesos aleatorios (siempre positivos y sumando 100%, es decir, sin ventas
       en corto) y se ubica cada uno en un plano de riesgo (eje x) vs. retorno (eje y), coloreado
@@ -218,8 +220,8 @@
 
 <section class="step" id="paso6">
   <div class="wrap">
-    <div class="step-head"><span class="step-num">PASO 6</span><h2>La frontera eficiente</h2></div>
-    <p>
+    <div class="step-head"><span class="step-num" data-i18n="paso6.badge">PASO 6</span><h2 data-i18n="paso6.title">La frontera eficiente</h2></div>
+    <p data-i18n="paso6.p">
       La <strong>frontera eficiente</strong> es el borde superior-izquierdo de lo posible: para
       cada nivel de riesgo, el máximo retorno alcanzable (o, equivalentemente, para cada retorno
       objetivo, el mínimo riesgo). El <strong>escenario base de este sitio es long-only</strong>
@@ -235,8 +237,8 @@
 
 <section class="step" id="paso7">
   <div class="wrap">
-    <div class="step-head"><span class="step-num">PASO 7</span><h2>Portafolios notables</h2></div>
-    <p>
+    <div class="step-head"><span class="step-num" data-i18n="paso7.badge">PASO 7</span><h2 data-i18n="paso7.title">Portafolios notables</h2></div>
+    <p data-i18n="paso7.p">
       Sobre la frontera hay dos puntos especialmente importantes: el de
       <strong>mínima varianza</strong> (el portafolio menos riesgoso posible, sin importar el
       retorno) y el <strong>portafolio tangente</strong> — el que maximiza el Sharpe ratio,
@@ -249,14 +251,14 @@
     <div class="grid-2">
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <h3 style="font-size:1rem; margin:0">Pesos del portafolio tangente</h3>
-          <button type="button" class="table-toggle" id="tangency-table-toggle">Ver como tabla</button>
+          <h3 style="font-size:1rem; margin:0" data-i18n="paso7.tangencyWeightsTitle">Pesos del portafolio tangente</h3>
+          <button type="button" class="table-toggle" id="tangency-table-toggle" data-i18n="app.viewTable">Ver como tabla</button>
         </div>
         <div class="plot" id="plot-tangency-weights"></div>
         <div id="tangency-table-wrap" class="table-toggle-wrap" hidden></div>
       </div>
       <div class="card">
-        <h3 style="font-size:1rem">Comparación de portafolios</h3>
+        <h3 style="font-size:1rem" data-i18n="paso7.comparisonTitle">Comparación de portafolios</h3>
         <div id="comparison-table-wrap"></div>
       </div>
     </div>
@@ -265,21 +267,21 @@
 
 <section class="step" id="paso8">
   <div class="wrap">
-    <div class="step-head"><span class="step-num">PASO 8</span><h2>Calculadora: elige tu nivel de riesgo</h2></div>
-    <p>
+    <div class="step-head"><span class="step-num" data-i18n="paso8.badge">PASO 8</span><h2 data-i18n="paso8.title">Calculadora: elige tu nivel de riesgo</h2></div>
+    <p data-i18n="paso8.p">
       Mueve el control para fijar un retorno anual objetivo y observa en vivo qué pesos exactos
       necesitas en cada activo para lograr ese retorno con el mínimo riesgo posible.
     </p>
     <div class="callout" id="paso8-callout"></div>
     <div class="slider-row">
-      <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-faint)">Retorno objetivo</span>
+      <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-faint)" data-i18n="paso8.sliderLabel">Retorno objetivo</span>
       <input type="range" id="target-return-slider" min="0" max="1" step="0.001" value="0.1" />
       <span class="slider-value" id="target-return-value">—</span>
     </div>
     <div id="target-tiles" class="stat-grid"></div>
     <div class="card">
       <div style="display:flex; justify-content:flex-end;">
-        <button type="button" class="table-toggle" id="target-table-toggle">Ver como tabla</button>
+        <button type="button" class="table-toggle" id="target-table-toggle" data-i18n="app.viewTable">Ver como tabla</button>
       </div>
       <div class="plot" id="plot-target-weights"></div>
       <div id="target-table-wrap" class="table-toggle-wrap" hidden></div>
@@ -288,10 +290,10 @@
   </div>
 </section>
 
-<section class="step" id="limitaciones" style="border-bottom:none">
+<section class="step" id="limitaciones">
   <div class="wrap">
-    <div class="step-head"><span class="step-num">LÍMITES</span><h2>Limitaciones y para seguir leyendo</h2></div>
-    <div class="callout danger">
+    <div class="step-head"><span class="step-num" data-i18n="limits.badge">LÍMITES</span><h2 data-i18n="limits.title">Limitaciones y para seguir leyendo</h2></div>
+    <div class="callout danger" data-i18n="limits.callout">
       Este sitio es material educativo, no asesoría financiera. Los datos vienen de Yahoo
       Finance (fuente gratuita, sin garantía de exactitud y con posibles huecos). El retorno
       esperado se estima como el promedio histórico, un predictor pobre del futuro — y los
@@ -300,7 +302,7 @@
       (Los demás supuestos del modelo — normalidad, sin costos de transacción — están en el
       Paso 4.)
     </div>
-    <p style="margin-top:20px">
+    <p style="margin-top:20px" data-i18n="limits.reading">
       Para profundizar: Harry Markowitz, <em>"Portfolio Selection"</em>, Journal of Finance
       (1952) — el paper original; William Sharpe y el modelo CAPM, que extiende esta misma idea
       a un mercado de equilibrio.
@@ -308,13 +310,27 @@
   </div>
 </section>
 
-<footer>
+<section class="step" id="creador" style="border-bottom:none">
   <div class="wrap">
+    <div class="step-head"><span class="step-num" data-i18n="creator.badge">CREADOR</span><h2 data-i18n="creator.title">Sobre el creador</h2></div>
+    <div class="creator-card">
+      <p data-i18n="creator.text" style="margin:0">Hecho por Andrés Londoño.</p>
+      <div class="creator-links">
+        <a href="https://github.com/andreslondonopar-ux" target="_blank" rel="noopener">GitHub ↗</a>
+        <a href="https://www.linkedin.com/in/andrés-londoño-paredes/" target="_blank" rel="noopener">LinkedIn ↗</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap" data-i18n="footer.text">
     Markowitz Portfolio Lab — proyecto educativo independiente. Datos: Yahoo Finance. Cómputo:
     100% en el navegador (JavaScript), sin backend de optimización.
   </div>
 </footer>
 
+<script src="assets/js/i18n.js"></script>
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>

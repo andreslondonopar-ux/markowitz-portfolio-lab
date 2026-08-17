@@ -96,6 +96,46 @@ code { font-family: var(--font-mono); font-size: 0.9em; background: var(--accent
 }
 .topnav nav a:hover { color: var(--text); background: var(--bg-card); }
 
+.lang-toggle {
+  margin-left: auto;
+  flex-shrink: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  color: var(--text-soft);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.lang-toggle:hover { color: var(--accent); border-color: var(--accent); }
+
+/* --- Sección del creador --- */
+.creator-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 22px;
+}
+.creator-links { display: flex; gap: 12px; }
+.creator-links a {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-soft);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 12px;
+}
+.creator-links a:hover { color: var(--accent); border-color: var(--accent); }
+
 /* --- Hero --- */
 .hero { padding: 64px 0 36px; border-bottom: 1px solid var(--line); }
 .hero p.lead { font-size: 1.15rem; }

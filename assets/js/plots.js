@@ -61,7 +61,7 @@ const Plots = (() => {
     });
     const layout = baseLayout(null, {
       hovermode: "closest",
-      yaxis: { title: "Precio normalizado (base 100)", gridcolor: COLORS.grid },
+      yaxis: { title: I18N.t("charts.priceYAxis"), gridcolor: COLORS.grid },
     });
     Plotly.newPlot(el, traces, layout, CONFIG).then(() => {
       const highlight = (idx) => {
@@ -121,7 +121,7 @@ const Plots = (() => {
       y: cloud.map((p) => p.return * 100),
       mode: "markers",
       type: "scattergl",
-      name: "Simulación Monte Carlo (long-only)",
+      name: I18N.t("charts.monteCarloName"),
       marker: {
         size: 4,
         color: cloud.map((p) => p.sharpe),
@@ -130,9 +130,9 @@ const Plots = (() => {
           [1, COLORS.accent],
         ],
         opacity: 0.55,
-        colorbar: { title: "Sharpe", tickfont: { color: COLORS.text } },
+        colorbar: { title: I18N.t("charts.sharpeColorbar"), tickfont: { color: COLORS.text } },
       },
-      hovertemplate: "Vol: %{x:.2f}%<br>Retorno: %{y:.2f}%<extra></extra>",
+      hovertemplate: I18N.t("charts.hoverVolReturn"),
     });
 
     if (longOnlyCurve && longOnlyCurve.length) {
@@ -141,7 +141,7 @@ const Plots = (() => {
         y: longOnlyCurve.map((p) => p.return * 100),
         mode: "lines",
         type: "scatter",
-        name: isLongOnlyActive ? "Frontera long-only (escenario base)" : "Frontera long-only (sin shorting)",
+        name: I18N.t(isLongOnlyActive ? "charts.longOnlyCurveActive" : "charts.longOnlyCurveInactive"),
         line: isLongOnlyActive
           ? { color: COLORS.accent2, width: 3 }
           : { color: COLORS.accent2, width: 1.5, dash: "dot" },
@@ -155,7 +155,7 @@ const Plots = (() => {
         y: analytic.map((p) => p.return * 100),
         mode: "lines",
         type: "scatter",
-        name: !isLongOnlyActive ? "Frontera analítica (escenario con shorting)" : "Frontera analítica (permite shorting)",
+        name: I18N.t(!isLongOnlyActive ? "charts.analyticCurveActive" : "charts.analyticCurveInactive"),
         line: !isLongOnlyActive ? { color: COLORS.text, width: 3 } : { color: COLORS.text, width: 1.5, dash: "dot" },
         opacity: !isLongOnlyActive ? 1 : 0.5,
       });
@@ -167,7 +167,7 @@ const Plots = (() => {
         y: cml.map((p) => p.return * 100),
         mode: "lines",
         type: "scatter",
-        name: "Capital Market Line",
+        name: I18N.t("charts.cml"),
         line: { color: COLORS.accent3, width: 1.5, dash: "dash" },
       });
     }
@@ -178,7 +178,7 @@ const Plots = (() => {
         y: [minVarPoint.return * 100],
         mode: "markers",
         type: "scatter",
-        name: "Mínima varianza",
+        name: I18N.t("charts.minVar"),
         marker: {
           size: 14,
           color: COLORS.accent2,
@@ -194,7 +194,7 @@ const Plots = (() => {
         y: [tangencyPoint.return * 100],
         mode: "markers",
         type: "scatter",
-        name: "Portafolio tangente (máx Sharpe)",
+        name: I18N.t("charts.tangency"),
         marker: {
           size: 15,
           color: COLORS.accent3,
@@ -205,8 +205,8 @@ const Plots = (() => {
     }
 
     const layout = baseLayout(null, {
-      xaxis: { title: "Volatilidad anualizada (%)", gridcolor: COLORS.grid },
-      yaxis: { title: "Retorno esperado anualizado (%)", gridcolor: COLORS.grid },
+      xaxis: { title: I18N.t("charts.volAxis"), gridcolor: COLORS.grid },
+      yaxis: { title: I18N.t("charts.returnAxis"), gridcolor: COLORS.grid },
       margin: { t: 20, r: 40, b: 150, l: 55 },
       legend: {
         orientation: "h",
@@ -249,7 +249,7 @@ const Plots = (() => {
       bargap: 0.35,
       margin: { t: 20, r: 40, b: 45, l: 60 },
       xaxis: {
-        title: "Peso en el portafolio (%)",
+        title: I18N.t("charts.weightAxis"),
         gridcolor: COLORS.grid,
         zeroline: true,
         zerolinecolor: COLORS.text,

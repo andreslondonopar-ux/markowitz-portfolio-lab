@@ -258,11 +258,13 @@ const I18N = (() => {
       es: `Para profundizar: Harry Markowitz, <em>"Portfolio Selection"</em>, Journal of Finance
         (1952) — el paper original; William Sharpe y el modelo CAPM, que extiende esta misma idea
         a un mercado de equilibrio — puedes explorarlo en vivo, con el mismo formato paso a
-        paso, en <a href="https://capm-beta-lab.vercel.app" target="_blank" rel="noopener">CAPM Beta-Alpha Lab</a>.`,
+        paso, en <a href="https://capm-beta-lab.vercel.app" target="_blank" rel="noopener">CAPM Beta-Alpha Lab</a>; y
+        <a href="https://dcf-valuation-lab.vercel.app" target="_blank" rel="noopener">DCF Valuation Lab</a>, que usa ese mismo costo de capital para valorar una empresa completa.`,
       en: `To go deeper: Harry Markowitz, <em>"Portfolio Selection"</em>, Journal of Finance
         (1952) — the original paper; William Sharpe and the CAPM model, which extends this
         same idea to an equilibrium market — explore it live, in the same step-by-step
-        format, at <a href="https://capm-beta-lab.vercel.app" target="_blank" rel="noopener">CAPM Beta-Alpha Lab</a>.`,
+        format, at <a href="https://capm-beta-lab.vercel.app" target="_blank" rel="noopener">CAPM Beta-Alpha Lab</a>; and
+        <a href="https://dcf-valuation-lab.vercel.app" target="_blank" rel="noopener">DCF Valuation Lab</a>, which uses that same cost of capital to value a whole company.`,
     },
 
     "creator.badge": { es: "CREADOR", en: "CREATOR" },

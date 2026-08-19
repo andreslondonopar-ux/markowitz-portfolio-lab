@@ -433,6 +433,7 @@ const MAX_TICKERS = 10;
     }
     if (state) {
       renderFromState();
+      setStatus(readyStatusMessage());
     } else {
       setStatus(I18N.t("controls.loadingDefault"));
     }
